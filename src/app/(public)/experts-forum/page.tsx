@@ -3,6 +3,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronRight, Wheat, Apple, Carrot } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface Article {
     title: string;
     excerpt?: string | null;

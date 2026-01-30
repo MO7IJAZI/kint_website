@@ -1,6 +1,8 @@
 import { getProducts } from "@/actions/productActions";
 import CropForm from "@/components/admin/CropForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function NewCropPage() {
     const products = await getProducts();
 

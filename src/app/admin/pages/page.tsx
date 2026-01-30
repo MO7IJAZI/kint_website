@@ -2,7 +2,9 @@ import { getPages } from "@/actions/pageActions";
 import Link from "next/link";
 import DeleteButton from "@/components/admin/DeleteButton";
 
-export default async function AdminPages() {
+export const dynamic = 'force-dynamic';
+
+export default async function AdminPages(props) {
     const pages = await getPages();
     return (
         <div>

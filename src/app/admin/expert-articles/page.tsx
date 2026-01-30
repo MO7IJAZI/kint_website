@@ -2,6 +2,8 @@ import { getExpertArticles } from "@/actions/expertArticleActions";
 import Link from "next/link";
 import DeleteButton from "@/components/admin/DeleteButton";
 
+export const dynamic = 'force-dynamic';
+
 interface ExpertArticleRow {
     id: string;
     title: string;

@@ -2,6 +2,8 @@ import { getBlogPosts } from "@/actions/blogActions";
 import Link from "next/link";
 import DeleteButton from "@/components/admin/DeleteButton";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminBlog() {
     const posts = await getBlogPosts();
 

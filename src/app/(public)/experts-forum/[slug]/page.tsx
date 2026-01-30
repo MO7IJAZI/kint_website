@@ -7,6 +7,8 @@ import parse from 'html-react-parser';
 import 'react-quill-new/dist/quill.snow.css';
 import ArticleStyles from "./ArticleStyles";
 
+export const dynamic = 'force-dynamic';
+
 // Utility to clean content and ensure proper wrapping
 function preprocessContent(html: string) {
     if (!html) return "";

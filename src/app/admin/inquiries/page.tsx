@@ -1,6 +1,8 @@
 import { getInquiries } from "@/actions/inquiryActions";
 import DeleteButton from "@/components/admin/DeleteButton";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminInquiries() {
     const inquiries = await getInquiries();
 

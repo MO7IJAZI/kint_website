@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import DeleteButton from "@/components/admin/DeleteButton";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminProducts() {
     const products = await getProducts();
 
