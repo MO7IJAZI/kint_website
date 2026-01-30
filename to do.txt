@@ -1,0 +1,523 @@
+Let me provide you with a **radical solution** that uses a different approach. The issue might be that the Quill editor is generating HTML that's interfering with our CSS. Let's try this:
+
+## **1. First, Update Your Page Component with This Version:**
+
+```jsx
+import { getExpertArticleBySlug } from "@/actions/expertArticleActions";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import parse from 'html-react-parser';
+import 'react-quill-new/dist/quill.snow.css';
+
+// Utility to force space-only wrapping
+function forceSpaceWrapping(html) {
+  if (!html) return "";
+  
+  // Replace all spaces with non-breaking spaces inside specific tags
+  const processed = html
+    // Wrap all text nodes in span with specific class
+    .replace(/>([^<]+)</g, (match, text) => {
+      if (text.trim() === '') return match;
+      return `><span class="force-space-wrap">${text}</span><`;
+    })
+    // Add zero-width space after punctuation
+    .replace(/([.,:;!?])([^<\s])/g, '$1&#8203;$2')
+    // Ensure URLs don't break layout
+    .replace(/(https?:\/\/[^\s<]+)/g, '<span class="force-url-break">$1</span>');
+  
+  return processed;
+}
+
+export default async function ExpertArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
+    const article = await getExpertArticleBySlug(slug);
+
+    if (!article) {
+        notFound();
+    }
+
+    const processedContent = forceSpaceWrapping(article.content || "");
+
+    return (
+        <div style={{ minHeight: '100vh', backgroundColor: '#fff' }}>
+            {/* Breadcrumb */}
+            <div style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', padding: '1rem 0' }}>
+                <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
+                    <nav style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem', 
+                        fontSize: '0.875rem', 
+                        color: '#64748b',
+                        flexWrap: 'wrap' 
+                    }}>
+                        <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Home</Link>
+                        <ChevronRight size={14} />
+                        <Link href="/crop-farming" style={{ textDecoration: 'none', color: 'inherit' }}>Crop Farming</Link>
+                        <ChevronRight size={14} />
+                        <Link href="/experts-forum" style={{ textDecoration: 'none', color: 'inherit' }}>Experts&apos; Forum</Link>
+                        <ChevronRight size={14} />
+                        <span style={{ 
+                            color: '#059669', 
+                            fontWeight: 600,
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word'
+                        }}>
+                            {article.title}
+                        </span>
+                    </nav>
+                </div>
+            </div>
+
+            <article className="section" style={{ padding: '4rem 0' }}>
+                <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                        <span style={{ 
+                            display: 'inline-block',
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#ecfdf5',
+                            color: '#059669',
+                            borderRadius: '2rem',
+                            fontSize: '0.9rem',
+                            fontWeight: 700,
+                            marginBottom: '1.5rem',
+                            textTransform: 'capitalize',
+                            wordBreak: 'normal',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            {article.category} Crops
+                        </span>
+                        <h1 style={{ 
+                            fontSize: 'clamp(2rem, 5vw, 3rem)', 
+                            fontWeight: 800, 
+                            marginBottom: '1.5rem', 
+                            lineHeight: '1.2', 
+                            color: '#1e293b',
+                            wordBreak: 'normal',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal'
+                        }}>
+                            {article.title}
+                        </h1>
+                        <div style={{ color: 'var(--muted-foreground)', display: 'flex', justifyContent: 'center', gap: '2rem', fontSize: '1rem', flexWrap: 'wrap' }}>
+                            <span>{article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Draft'}</span>
+                        </div>
+                    </div>
+
+                    <div style={{ position: 'relative', height: '400px', borderRadius: '1.5rem', overflow: 'hidden', marginBottom: '4rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+                        {article.image ? (
+                            <Image
+                                src={article.image}
+                                alt={article.title}
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                sizes="(max-width: 768px) 100vw, 1100px"
+                                priority
+                            />
+                        ) : (
+                            <div style={{ width: '100%', height: '100%', backgroundColor: '#e2e8f0' }} />
+                        )}
+                    </div>
+
+                    {/* SIMPLE CONTAINER - NO QUILL CLASSES */}
+                    <div className="article-content" style={{ 
+                        maxWidth: '100%',
+                        width: '100%',
+                        margin: '0 auto',
+                        padding: '2rem',
+                        backgroundColor: 'white',
+                        borderRadius: '1.25rem',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 10px 30px rgba(2, 8, 23, 0.04)',
+                        overflow: 'hidden'
+                    }}>
+                        <div 
+                            className="force-space-wrap-container"
+                            style={{
+                                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                                fontSize: '1.05rem',
+                                lineHeight: '1.8',
+                                color: '#334155',
+                            }}
+                        >
+                            {parse(processedContent)}
+                        </div>
+                    </div>
+                    
+                    <div style={{ 
+                        marginTop: '5rem', 
+                        padding: '3rem', 
+                        backgroundColor: '#f0fdf4', 
+                        borderRadius: '1.5rem', 
+                        textAlign: 'center', 
+                        border: '1px solid #dcfce7',
+                        wordBreak: 'normal',
+                        overflowWrap: 'break-word'
+                    }}>
+                        <h3 style={{ 
+                            marginBottom: '1rem', 
+                            color: '#166534', 
+                            fontSize: '1.5rem', 
+                            fontWeight: 700,
+                            wordBreak: 'normal'
+                        }}>
+                            Questions about this topic?
+                        </h3>
+                        <p style={{ 
+                            color: '#15803d', 
+                            marginBottom: '2rem', 
+                            fontSize: '1.1rem',
+                            wordBreak: 'normal'
+                        }}>
+                            Our agricultural experts are ready to help you implement these practices on your farm.
+                        </p>
+                        <Link href="/contact" className="btn btn-primary">Contact an Expert</Link>
+                    </div>
+                </div>
+            </article>
+
+            {/* INLINE GLOBAL STYLES - NO EXCEPTIONS */}
+            <style jsx global>{`
+                /* RADICAL FIX: Force space-only wrapping */
+                .article-content,
+                .article-content *,
+                .force-space-wrap-container,
+                .force-space-wrap-container * {
+                    /* ABSOLUTELY NO WORD BREAKING - ONLY AT SPACES */
+                    word-break: normal !important;
+                    word-wrap: normal !important;
+                    overflow-wrap: normal !important;
+                    white-space: normal !important;
+                    hyphens: none !important;
+                    line-break: auto !important;
+                    
+                    /* Force wrapping behavior */
+                    display: block !important;
+                    max-width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+                
+                /* Force paragraphs to wrap at spaces */
+                .article-content p,
+                .force-space-wrap-container p {
+                    margin-bottom: 1.5rem !important;
+                    text-align: justify !important;
+                    text-justify: inter-word !important;
+                    word-spacing: normal !important;
+                    letter-spacing: normal !important;
+                    
+                    /* CRITICAL: Force wrap at spaces only */
+                    overflow-wrap: break-word !important;
+                    word-break: keep-all !important;
+                    white-space: pre-wrap !important;
+                }
+                
+                /* Special handling for text spans */
+                .force-space-wrap {
+                    display: inline !important;
+                    word-break: normal !important;
+                    overflow-wrap: normal !important;
+                    white-space: normal !important;
+                }
+                
+                /* Force URLs to break only when absolutely necessary */
+                .force-url-break {
+                    word-break: break-all !important;
+                    overflow-wrap: anywhere !important;
+                }
+                
+                /* Headers - also wrap at spaces */
+                .article-content h1,
+                .article-content h2,
+                .article-content h3,
+                .article-content h4,
+                .force-space-wrap-container h1,
+                .force-space-wrap-container h2,
+                .force-space-wrap-container h3,
+                .force-space-wrap-container h4 {
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
+                    white-space: normal !important;
+                    margin-top: 2.5rem !important;
+                    margin-bottom: 1.25rem !important;
+                }
+                
+                /* Lists */
+                .article-content ul,
+                .article-content ol,
+                .force-space-wrap-container ul,
+                .force-space-wrap-container ol {
+                    margin-bottom: 1.5rem !important;
+                    padding-left: 1.5rem !important;
+                }
+                
+                .article-content li,
+                .force-space-wrap-container li {
+                    margin-bottom: 0.5rem !important;
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
+                }
+                
+                /* Tables */
+                .article-content table,
+                .force-space-wrap-container table {
+                    width: 100% !important;
+                    border-collapse: collapse !important;
+                    margin: 2rem 0 !important;
+                    overflow-x: auto !important;
+                    display: block !important;
+                }
+                
+                .article-content td,
+                .article-content th,
+                .force-space-wrap-container td,
+                .force-space-wrap-container th {
+                    padding: 0.75rem !important;
+                    border: 1px solid #e2e8f0 !important;
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
+                }
+                
+                /* MEDIA QUERIES */
+                @media (max-width: 768px) {
+                    .article-content,
+                    .force-space-wrap-container {
+                        padding: 1.5rem !important;
+                    }
+                    
+                    .article-content p,
+                    .force-space-wrap-container p {
+                        text-align: left !important;
+                    }
+                }
+            `}</style>
+        </div>
+    );
+}
+```
+
+## **2. Add These CSS Rules to Your `globals.css` (Replace All Previous Text Wrapping Rules):**
+
+```css
+/* ========================================== */
+/* ULTIMATE TEXT WRAPPING FIX - SPACES ONLY  */
+/* ========================================== */
+
+/* Reset ALL text wrapping to defaults first */
+* {
+    word-break: normal;
+    overflow-wrap: normal;
+    word-wrap: normal;
+    white-space: normal;
+    hyphens: none;
+}
+
+/* Container for article content */
+.article-content {
+    /* Basic styling */
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 1.25rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(2, 8, 23, 0.04);
+    overflow: hidden;
+    
+    /* TEXT WRAPPING RULES */
+    word-break: normal !important;        /* NO breaking within words */
+    overflow-wrap: break-word !important; /* Break ONLY at spaces */
+    word-wrap: break-word !important;
+    white-space: normal !important;       /* Normal whitespace */
+    hyphens: none !important;             /* No hyphenation */
+    line-break: strict !important;        /* Strict line breaking */
+    
+    /* Typography */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #334155;
+}
+
+/* Force ALL children to inherit these rules */
+.article-content * {
+    word-break: inherit !important;
+    overflow-wrap: inherit !important;
+    word-wrap: inherit !important;
+    white-space: inherit !important;
+    hyphens: inherit !important;
+    line-break: inherit !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* PARAGRAPHS - The most important fix */
+.article-content p {
+    margin-bottom: 1.5rem !important;
+    display: block !important;
+    
+    /* Force wrapping at spaces ONLY */
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    hyphens: none !important;
+    
+    /* Justify text for even spacing */
+    text-align: justify !important;
+    text-justify: inter-word !important;
+    
+    /* Prevent any other breaking */
+    line-break: strict !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+}
+
+/* HEADERS */
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #1e293b;
+    margin-top: 2.5rem !important;
+    margin-bottom: 1.25rem !important;
+    
+    /* Same wrapping rules */
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+}
+
+/* LISTS */
+.article-content ul,
+.article-content ol {
+    margin-bottom: 1.5rem !important;
+    padding-left: 1.5rem !important;
+    list-style-position: outside !important;
+}
+
+.article-content li {
+    margin-bottom: 0.5rem !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+}
+
+/* TABLES */
+.article-content table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 2rem 0 !important;
+    overflow-x: auto !important;
+    display: block !important;
+}
+
+.article-content td,
+.article-content th {
+    padding: 0.75rem !important;
+    border: 1px solid #e2e8f0 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+}
+
+/* SPECIAL CASES */
+
+/* URLs - allow breaking anywhere */
+.article-content a[href^="http"],
+.article-content a[href^="https"] {
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+}
+
+/* Code blocks - keep as-is */
+.article-content pre,
+.article-content code {
+    white-space: pre !important;
+    word-break: normal !important;
+    overflow-x: auto !important;
+    display: block !important;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem !important;
+}
+
+/* Inline code */
+.article-content :not(pre) > code {
+    white-space: normal !important;
+    word-break: break-all !important;
+}
+
+/* Images */
+.article-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block;
+    margin: 2rem auto;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .article-content {
+        padding: 1.5rem !important;
+        border-radius: 1rem !important;
+    }
+    
+    .article-content p {
+        text-align: left !important; /* Better readability on mobile */
+    }
+    
+    /* More aggressive wrapping on very small screens */
+    .article-content {
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+}
+
+/* PRINT STYLES */
+@media print {
+    .article-content {
+        word-break: normal !important;
+        overflow-wrap: normal !important;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}
+```
+
+## **3. Key Changes in This Approach:**
+
+1. **Removed all Quill editor classes** - They might be conflicting
+2. **Used simple `.article-content` container** - No complex class inheritance
+3. **Force inherited styles on ALL children** - Using `!important` and `inherit`
+4. **Added `text-align: justify` and `text-justify: inter-word`** - Forces space-based wrapping
+5. **Used `white-space: normal`** - Ensures normal whitespace handling
+6. **Added the `forceSpaceWrapping` utility** - Preprocesses content to add zero-width spaces after punctuation
+
+## **How It Works:**
+
+1. When text hits the container boundary
+2. The browser looks for the **last space** in the line
+3. It breaks the line at that space
+4. Continues the remaining text on the next line
+5. Punctuation stays with its word
+
+## **Testing:**
+
+Test with this text pattern:
+```
+Thisisaverylongwordwithoutspacesthatshould:breakdifferently. Normal words with spaces should wrap correctly at the last space before the boundary.
+```
+
+If this still doesn't work, the issue might be in **how the content is stored** in your database. Check if the content has any `&nbsp;` (non-breaking spaces) or special characters that prevent normal wrapping.
