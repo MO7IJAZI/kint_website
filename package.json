@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "db:deploy": "prisma migrate deploy",
-    "start": "node server.js",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
