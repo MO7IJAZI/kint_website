@@ -7,28 +7,34 @@ export default async function PublicLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const productCategories = await prisma.category.findMany({
-        where: { isActive: true, parentId: null },
-        orderBy: [{ order: 'asc' }, { name: 'asc' }],
-        select: {
-            id: true,
-            name: true,
-            name_ar: true,
-            slug: true,
-            description: true,
-            description_ar: true,
-            children: {
-                where: { isActive: true },
-                orderBy: [{ order: 'asc' }, { name: 'asc' }],
-                select: {
-                    id: true,
-                    name: true,
-                    name_ar: true,
-                    slug: true,
+    let productCategories: any[] = [];
+
+    try {
+        productCategories = await prisma.category.findMany({
+            where: { isActive: true, parentId: null },
+            orderBy: [{ order: 'asc' }, { name: 'asc' }],
+            select: {
+                id: true,
+                name: true,
+                name_ar: true,
+                slug: true,
+                description: true,
+                description_ar: true,
+                children: {
+                    where: { isActive: true },
+                    orderBy: [{ order: 'asc' }, { name: 'asc' }],
+                    select: {
+                        id: true,
+                        name: true,
+                        name_ar: true,
+                        slug: true,
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error("Public layout categories load failed:", error);
+    }
 
     return (
         <>
