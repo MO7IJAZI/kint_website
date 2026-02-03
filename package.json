@@ -16,7 +16,6 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "node server.js",
-    "prebuild": "npx prisma db pull",
     "hostinger:setup": "npx prisma generate"
   },
   "prisma": {
