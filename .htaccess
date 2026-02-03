@@ -1,5 +1,6 @@
-RewriteEngine On
-RewriteRule ^$ http://127.0.0.1:3000/ [P,L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+PassengerAppRoot /home/u884871213/domains/kint-group.com/public_html
+PassengerAppType node
+PassengerNodejs /opt/alt/alt-nodejs20/root/bin/node
+PassengerStartupFile server.js
+PassengerBaseURI /
+SetEnv NODE_ENV production
