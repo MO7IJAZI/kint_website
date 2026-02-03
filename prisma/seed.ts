@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -27,14 +26,14 @@ async function main() {
 
     // 1. Create Categories from the plan
     const categories = [
-        { name: 'Biostimulants', slug: 'biostimulants' },
-        { name: 'Activators', slug: 'activators' },
-        { name: 'Bioproducts', slug: 'bioproducts' },
-        { name: 'Foliar Fertilizers', slug: 'foliar-fertilizers' },
-        { name: 'Seed Fertilizers', slug: 'seed-fertilizers' },
-        { name: 'Fertilizers for Fertigation', slug: 'fertigation' },
-        { name: 'Tank Mix Additives', slug: 'tank-mix-additives' },
-        { name: 'Organic Farming', slug: 'organic-farming' },
+        { name: 'Biostimulants', name_ar: 'المنشطات الحيوية', slug: 'biostimulants' },
+        { name: 'Activators', name_ar: 'المنشطات', slug: 'activators' },
+        { name: 'Bioproducts', name_ar: 'المنتجات الحيوية', slug: 'bioproducts' },
+        { name: 'Foliar Fertilizers', name_ar: 'الأسمدة الورقية', slug: 'foliar-fertilizers' },
+        { name: 'Seed Fertilizers', name_ar: 'أسمدة البذور', slug: 'seed-fertilizers' },
+        { name: 'Fertilizers for Fertigation', name_ar: 'أسمدة الري', slug: 'fertigation' },
+        { name: 'Tank Mix Additives', name_ar: 'إضافات خلط الخزان', slug: 'tank-mix-additives' },
+        { name: 'Organic Farming', name_ar: 'الزراعة العضوية', slug: 'organic-farming' },
     ];
 
     const categoryMap: Record<string, string> = {};
@@ -45,6 +44,7 @@ async function main() {
             update: {},
             create: {
                 name: cat.name,
+                name_ar: cat.name_ar,
                 slug: cat.slug,
                 isActive: true,
             },

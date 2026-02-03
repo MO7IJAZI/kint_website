@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -8,16 +8,17 @@ import Link from '@tiptap/extension-link'
 import DOMPurify from 'dompurify'
 import debounce from 'lodash.debounce'
 import './RichTextEditor.css'
+import { useTranslations } from 'next-intl'
 
 interface Props {
   label?: string
   value?: string
   onChange?: (html: string) => void
   autosaveKey?: string
+  dir?: 'ltr' | 'rtl' | 'auto'
 }
 
 interface SelectedImage {
-  node: Record<string, unknown>
   pos: number
   src: string
   x: number
@@ -64,7 +65,9 @@ export default function RichTextEditor({
   value = '',
   onChange,
   autosaveKey,
+  dir = 'ltr',
 }: Props) {
+  const t = useTranslations('AdminRichText')
   const [selectedImage, setSelectedImage] = useState<SelectedImage | null>(null)
   /* ============================
      Auto-Save (Debounced)
@@ -92,12 +95,12 @@ export default function RichTextEditor({
     })
 
     if (!res.ok) {
-      throw new Error('Image upload failed')
+      throw new Error(t('uploadError'))
     }
 
     const data = await res.json()
     return data.url as string
-  }, [])
+  }, [t])
 
   /* ============================
      Tiptap Editor Instance
@@ -132,6 +135,7 @@ export default function RichTextEditor({
     editorProps: {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none',
+        dir: dir,
       },
       handleDOMEvents: {
         click: (view, event) => {
@@ -141,17 +145,15 @@ export default function RichTextEditor({
             const pos = view.posAtDOM(img, 0)
             
             // Find the node and its position
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            let node: any = null
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            view.state.doc.nodesBetween(Math.max(0, pos - 2), pos + 2, (n: any) => {
+            let imagePos: number | null = null
+            view.state.doc.nodesBetween(Math.max(0, pos - 2), pos + 2, (n, p) => {
               if (n.type.name === 'image') {
-                node = n
+                imagePos = p
                 return false
               }
             })
 
-            if (node) {
+            if (imagePos !== null) {
               const rect = img.getBoundingClientRect()
               const container = document.querySelector('.editor-container')
               const containerRect = container?.getBoundingClientRect()
@@ -160,9 +162,8 @@ export default function RichTextEditor({
               if (containerRect && editorRect) {
                 // Position relative to the editor wrapper
                 setSelectedImage({
-                  node,
-                  pos,
-                  src: node.attrs.src,
+                  pos: imagePos,
+                  src: img.src,
                   x: editorRect.width - 8, // Right edge with small margin
                   y: rect.top - editorRect.top + (rect.height / 2), // Vertically centered on image
                   width: rect.width,
@@ -267,29 +268,16 @@ export default function RichTextEditor({
     },
   })
 
+  // Update editor content when value prop changes (e.g. switching tabs)
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value || '')
+    }
+  }, [value, editor])
+
   /* ============================
      Image Click Detection & Positioning
    ============================ */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const calculateImagePosition = useCallback(() => {
-    const editorContainer = document.querySelector('.editor-container')
-    const selectedImg = editorContainer?.querySelector('.editor-image') as HTMLImageElement | null
-    
-    if (selectedImg && editorContainer) {
-      const rect = selectedImg.getBoundingClientRect()
-      const containerRect = editorContainer.getBoundingClientRect()
-      
-      setSelectedImage({
-        node: (selectedImage?.node || {}) as Record<string, unknown>,
-        pos: selectedImage?.pos || 0,
-        src: selectedImage?.src || '',
-        x: rect.left - containerRect.left,
-        y: rect.top - containerRect.top,
-        width: rect.width,
-        height: rect.height,
-      })
-    }
-  }, [selectedImage?.node, selectedImage?.pos, selectedImage?.src])
   const handleImageUpload = useCallback(async () => {
     if (!editor) return
 
@@ -318,12 +306,12 @@ export default function RichTextEditor({
           .run()
       } catch (error) {
         console.error('Image upload failed:', error)
-        alert('Failed to upload image. Please try again.')
+        alert(t('uploadError'))
       }
     }
 
     input.click()
-  }, [editor, uploadImage])
+  }, [editor, uploadImage, t])
 
   /* ============================
      Delete Selected Image
@@ -379,12 +367,12 @@ export default function RichTextEditor({
         setSelectedImage(null)
       } catch (error) {
         console.error('Image replacement failed:', error)
-        alert('Failed to replace image. Please try again.')
+        alert(t('replaceError'))
       }
     }
 
     input.click()
-  }, [editor, selectedImage, uploadImage])
+  }, [editor, selectedImage, uploadImage, t])
 
   /* ============================
       Resize Selected Image
@@ -456,7 +444,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleHeading({ level: 1 }).run()
             }}
             className={`toolbar-btn ${editor.isActive('heading', { level: 1 }) ? 'active' : ''}`}
-            title="Heading 1"
+            title={t('h1')}
           >
             H1
           </button>
@@ -468,7 +456,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleHeading({ level: 2 }).run()
             }}
             className={`toolbar-btn ${editor.isActive('heading', { level: 2 }) ? 'active' : ''}`}
-            title="Heading 2"
+            title={t('h2')}
           >
             H2
           </button>
@@ -480,7 +468,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleHeading({ level: 3 }).run()
             }}
             className={`toolbar-btn ${editor.isActive('heading', { level: 3 }) ? 'active' : ''}`}
-            title="Heading 3"
+            title={t('h3')}
           >
             H3
           </button>
@@ -497,7 +485,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleBold().run()
             }}
             className={`toolbar-btn ${editor.isActive('bold') ? 'active' : ''}`}
-            title="Bold"
+            title={t('bold')}
           >
             <strong>B</strong>
           </button>
@@ -509,7 +497,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleItalic().run()
             }}
             className={`toolbar-btn ${editor.isActive('italic') ? 'active' : ''}`}
-            title="Italic"
+            title={t('italic')}
           >
             <em>I</em>
           </button>
@@ -521,7 +509,7 @@ export default function RichTextEditor({
               editor.chain().focus().toggleStrike().run()
             }}
             className={`toolbar-btn ${editor.isActive('strike') ? 'active' : ''}`}
-            title="Strike"
+            title={t('strike')}
           >
             <s>S</s>
           </button>
@@ -538,9 +526,9 @@ export default function RichTextEditor({
               editor.chain().focus().toggleBulletList().run()
             }}
             className={`toolbar-btn ${editor.isActive('bulletList') ? 'active' : ''}`}
-            title="Bullet List"
+            title={t('bulletList')}
           >
-            • List
+            • {t('list')}
           </button>
           <button
             type="button"
@@ -550,9 +538,9 @@ export default function RichTextEditor({
               editor.chain().focus().toggleOrderedList().run()
             }}
             className={`toolbar-btn ${editor.isActive('orderedList') ? 'active' : ''}`}
-            title="Ordered List"
+            title={t('orderedList')}
           >
-            1. List
+            1. {t('list')}
           </button>
         </div>
 
@@ -567,16 +555,16 @@ export default function RichTextEditor({
               handleImageUpload()
             }}
             className="toolbar-btn"
-            title="Insert Image"
+            title={t('insertImage')}
           >
-            🖼️ Image
+            🖼️ {t('image')}
           </button>
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              const url = prompt('Enter the URL')
+              const url = prompt(t('enterUrl'))
               if (url) {
                 editor
                   .chain()
@@ -587,9 +575,9 @@ export default function RichTextEditor({
               }
             }}
             className={`toolbar-btn ${editor.isActive('link') ? 'active' : ''}`}
-            title="Link"
+            title={t('link')}
           >
-            🔗 Link
+            🔗 {t('link')}
           </button>
         </div>
 
@@ -604,9 +592,9 @@ export default function RichTextEditor({
               editor.chain().focus().clearNodes().run()
             }}
             className="toolbar-btn"
-            title="Clear Formatting"
+            title={t('clear')}
           >
-            Clear
+            {t('clearText')}
           </button>
         </div>
 
@@ -615,7 +603,7 @@ export default function RichTextEditor({
           <>
             <div className="toolbar-divider" />
             <div className="toolbar-group image-actions-group">
-              <span className="image-actions-label">Image:</span>
+              <span className="image-actions-label">{t('imageLabel')}</span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -624,7 +612,7 @@ export default function RichTextEditor({
                   handleResizeImage(Math.max(100, (selectedImage.width || 300) - 50))
                 }}
                 className="toolbar-btn image-action-btn"
-                title="Smaller"
+                title={t('smaller')}
               >
                 −
               </button>
@@ -636,7 +624,7 @@ export default function RichTextEditor({
                   handleResizeImage((selectedImage.width || 300) + 50)
                 }}
                 className="toolbar-btn image-action-btn"
-                title="Larger"
+                title={t('larger')}
               >
                 +
               </button>
@@ -653,7 +641,7 @@ export default function RichTextEditor({
                 className="toolbar-btn image-action-btn resize-select"
                 style={{ padding: '0.5rem', minWidth: '80px' }}
               >
-                <option value="">Size</option>
+                <option value="">{t('size')}</option>
                 <option value="200">200px</option>
                 <option value="300">300px</option>
                 <option value="400">400px</option>
@@ -671,7 +659,7 @@ export default function RichTextEditor({
                   handleResetSize()
                 }}
                 className="toolbar-btn image-action-btn"
-                title="Reset Size"
+                title={t('resetSize')}
               >
                 ⇄
               </button>
@@ -683,7 +671,7 @@ export default function RichTextEditor({
                   handleReplaceImage()
                 }}
                 className="toolbar-btn image-action-btn"
-                title="Replace Image"
+                title={t('replaceImage')}
               >
                 ↻
               </button>
@@ -695,7 +683,7 @@ export default function RichTextEditor({
                   handleDeleteImage()
                 }}
                 className="toolbar-btn image-action-btn delete-btn"
-                title="Delete Image"
+                title={t('deleteImage')}
               >
                 🗑️
               </button>
@@ -711,7 +699,7 @@ export default function RichTextEditor({
 
       {/* Info */}
       <div className="editor-info">
-        💡 Tip: You can paste images directly into the editor or drag and drop them!
+        💡 {t('tip')}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import RichTextEditor from "./RichTextEditor";
 
 interface Product {
     id: string;
@@ -9,6 +10,9 @@ interface Product {
 
 interface Stage {
     name: string;
+    name_ar?: string;
+    description?: string;
+    description_ar?: string;
     products: string[]; // Product IDs
 }
 
@@ -22,7 +26,7 @@ export default function StagesEditor({ initialData, products, onChange }: Stages
     const [stages, setStages] = useState<Stage[]>(initialData || []);
 
     const addStage = () => {
-        const newStages = [...stages, { name: "", products: [] }];
+        const newStages = [...stages, { name: "", name_ar: "", description_ar: "", products: [] }];
         setStages(newStages);
         onChange(newStages);
     };
@@ -33,9 +37,9 @@ export default function StagesEditor({ initialData, products, onChange }: Stages
         onChange(newStages);
     };
 
-    const updateStageName = (index: number, name: string) => {
+    const updateStageField = <K extends keyof Stage>(index: number, field: K, value: Stage[K]) => {
         const newStages = [...stages];
-        newStages[index] = { ...newStages[index], name };
+        newStages[index] = { ...newStages[index], [field]: value };
         setStages(newStages);
         onChange(newStages);
     };
@@ -88,14 +92,42 @@ export default function StagesEditor({ initialData, products, onChange }: Stages
                             REMOVE
                         </button>
 
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>STAGE NAME (English)</label>
+                                <input 
+                                    className="input" 
+                                    style={{ width: '100%', backgroundColor: 'white' }}
+                                    placeholder="e.g. Tillering, Flowering, Fruit Setting..."
+                                    value={stage.name}
+                                    onChange={(e) => updateStageField(index, 'name', e.target.value)}
+                                />
+                            </div>
+                            <div dir="rtl">
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>اسم المرحلة (بالعربية)</label>
+                                <input 
+                                    className="input" 
+                                    style={{ width: '100%', backgroundColor: 'white' }}
+                                    placeholder="مثال: التزهير، عقد الثمار..."
+                                    value={stage.name_ar || ''}
+                                    onChange={(e) => updateStageField(index, 'name_ar', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>STAGE NAME</label>
-                            <input 
-                                className="input" 
-                                style={{ width: '100%', backgroundColor: 'white' }}
-                                placeholder="e.g. Tillering, Flowering, Fruit Setting..."
-                                value={stage.name}
-                                onChange={(e) => updateStageName(index, e.target.value)}
+                            <RichTextEditor
+                                label="STAGE DESCRIPTION (English)"
+                                value={stage.description || ''}
+                                onChange={(value) => updateStageField(index, 'description', value)}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }} dir="rtl">
+                            <RichTextEditor
+                                label="وصف المرحلة (بالعربية)"
+                                value={stage.description_ar || ''}
+                                onChange={(value) => updateStageField(index, 'description_ar', value)}
                             />
                         </div>
 

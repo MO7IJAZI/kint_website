@@ -8,6 +8,14 @@ export async function createCategory(formData: FormData) {
     const slug = formData.get("slug") as string;
     const description = formData.get("description") as string;
     const parentId = formData.get("parentId") as string;
+    const image = formData.get("image") as string;
+
+    const name_ar = formData.get("name_ar") as string;
+    const description_ar = formData.get("description_ar") as string;
+
+    if (!name_ar || !name_ar.trim()) {
+        throw new Error("name_ar is required");
+    }
 
     await prisma.category.create({
         data: {
@@ -15,6 +23,9 @@ export async function createCategory(formData: FormData) {
             slug,
             description,
             parentId: parentId || null,
+            name_ar: name_ar.trim(),
+            description_ar,
+            image: image && image.trim() ? image.trim() : null,
         },
     });
 
@@ -27,6 +38,14 @@ export async function updateCategory(id: string, formData: FormData) {
     const slug = formData.get("slug") as string;
     const description = formData.get("description") as string;
     const parentId = formData.get("parentId") as string;
+    const image = formData.get("image") as string;
+
+    const name_ar = formData.get("name_ar") as string;
+    const description_ar = formData.get("description_ar") as string;
+
+    if (!name_ar || !name_ar.trim()) {
+        throw new Error("name_ar is required");
+    }
 
     await prisma.category.update({
         where: { id },
@@ -35,6 +54,9 @@ export async function updateCategory(id: string, formData: FormData) {
             slug,
             description,
             parentId: parentId || null,
+            name_ar: name_ar.trim(),
+            description_ar,
+            image: image && image.trim() ? image.trim() : null,
         },
     });
 

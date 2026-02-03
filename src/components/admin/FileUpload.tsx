@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 
 interface FileUploadProps {
     value?: string;
@@ -10,9 +11,13 @@ interface FileUploadProps {
     placeholder?: string;
 }
 
-export default function FileUpload({ value, onChange, label, accept = "application/pdf", placeholder = "UPLOAD PDF DOCUMENT" }: FileUploadProps) {
+export default function FileUpload({ value, onChange, label, accept = "application/pdf", placeholder }: FileUploadProps) {
+    const t = useTranslations('AdminFileUpload');
     const [isUploading, setIsUploading] = useState(false);
     const [fileName, setFileName] = useState(value ? value.split('/').pop() : "");
+
+    const defaultPlaceholder = t('placeholder');
+    const finalPlaceholder = placeholder || defaultPlaceholder;
 
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -35,7 +40,7 @@ export default function FileUpload({ value, onChange, label, accept = "applicati
             }
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("File upload failed. Please try again.");
+            alert(t('uploadError'));
         } finally {
             setIsUploading(false);
         }
@@ -89,7 +94,7 @@ export default function FileUpload({ value, onChange, label, accept = "applicati
                             className="btn btn-outline"
                             style={{ width: '100%', pointerEvents: 'none', justifyContent: 'center' }}
                         >
-                            {isUploading ? "UPLOADING..." : value ? "CHANGE PDF FILE" : placeholder}
+                            {isUploading ? t('uploading') : value ? t('changeFile') : finalPlaceholder}
                         </button>
                     </div>
                     {fileName && (

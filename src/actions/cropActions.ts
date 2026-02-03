@@ -5,15 +5,23 @@ import { revalidatePath } from "next/cache";
 
 interface StageInput {
     name: string;
+    name_ar?: string;
+    description?: string;
+    description_ar?: string;
     products: string[];
 }
 
 export async function createCrop(formData: FormData) {
     const name = formData.get("name") as string;
+    const name_ar = formData.get("name_ar") as string;
     const slug = formData.get("slug") as string;
     const description = formData.get("description") as string;
+    const description_ar = formData.get("description_ar") as string;
+    const harvestSeason_ar = formData.get("harvestSeason_ar") as string;
     const image = formData.get("image") as string;
     const pdfUrl = formData.get("pdfUrl") as string;
+    const metaTitle = formData.get("metaTitle") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
     
     const productIdsStr = formData.get("productIds") as string;
     const productIds = productIdsStr ? (JSON.parse(productIdsStr) as string[]) : [];
@@ -24,16 +32,22 @@ export async function createCrop(formData: FormData) {
     await prisma.crop.create({
         data: {
             name,
+            name_ar,
             slug,
             description,
+            description_ar,
+            harvestSeason_ar,
             image,
             pdfUrl,
+            metaTitle,
+            metaTitle_ar,
             recommendedProducts: {
                 connect: productIds.map((id: string) => ({ id }))
             },
             stages: {
                 create: stages.map((s, index) => ({
                     name: s.name,
+                    name_ar: s.name_ar,
                     order: index,
                     recommendation: { products: s.products }
                 }))
@@ -77,10 +91,15 @@ export async function getCropById(id: string) {
 
 export async function updateCrop(id: string, formData: FormData) {
     const name = formData.get("name") as string;
+    const name_ar = formData.get("name_ar") as string;
     const slug = formData.get("slug") as string;
     const description = formData.get("description") as string;
+    const description_ar = formData.get("description_ar") as string;
+    const harvestSeason_ar = formData.get("harvestSeason_ar") as string;
     const image = formData.get("image") as string;
     const pdfUrl = formData.get("pdfUrl") as string;
+    const metaTitle = formData.get("metaTitle") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
     
     const productIdsStr = formData.get("productIds") as string;
     const productIds = productIdsStr ? (JSON.parse(productIdsStr) as string[]) : [];
@@ -92,10 +111,15 @@ export async function updateCrop(id: string, formData: FormData) {
         where: { id },
         data: {
             name,
+            name_ar,
             slug,
             description,
+            description_ar,
+            harvestSeason_ar,
             image,
             pdfUrl,
+            metaTitle,
+            metaTitle_ar,
             recommendedProducts: {
                 set: productIds.map((id: string) => ({ id }))
             },
@@ -103,6 +127,7 @@ export async function updateCrop(id: string, formData: FormData) {
                 deleteMany: {},
                 create: stages.map((s, index) => ({
                     name: s.name,
+                    name_ar: s.name_ar,
                     order: index,
                     recommendation: { products: s.products }
                 }))

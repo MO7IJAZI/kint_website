@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { title, description, imageUrl, order } = body;
+        const { title, title_ar, description, description_ar, imageUrl, order } = body;
 
         if (!title || !imageUrl) {
             return NextResponse.json({ error: 'Title and image URL are required' }, { status: 400 });
@@ -34,7 +34,9 @@ export async function POST(request: Request) {
         const certificate = await prisma.certificate.create({
             data: {
                 title,
+                title_ar,
                 description,
+                description_ar,
                 imageUrl,
                 order: order || 0,
             },
@@ -51,7 +53,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
     try {
         const body = await request.json();
-        const { id, title, description, imageUrl, order, isActive } = body;
+        const { id, title, title_ar, description, description_ar, imageUrl, order, isActive } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
@@ -61,7 +63,9 @@ export async function PUT(request: Request) {
             where: { id },
             data: {
                 title,
+                title_ar,
                 description,
+                description_ar,
                 imageUrl,
                 order,
                 isActive,

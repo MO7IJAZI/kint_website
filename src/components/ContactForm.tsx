@@ -3,10 +3,14 @@
 import { submitInquiry } from "@/actions/inquiryActions";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function ContactForm() {
     const searchParams = useSearchParams();
     const dept = searchParams.get('dept');
+    const t = useTranslations('Contact');
+    const locale = useLocale();
+    const isRtl = locale === 'ar';
 
     const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
     const [isPending, setIsPending] = useState(false);
@@ -27,13 +31,13 @@ export default function ContactForm() {
         try {
             const result = await submitInquiry(formData);
             if (result.success) {
-                setStatus({ type: 'success', message: result.message });
+                setStatus({ type: 'success', message: t('successMessage') });
                 (e.target as HTMLFormElement).reset();
             } else {
-                setStatus({ type: 'error', message: 'Something went wrong. Please try again.' });
+                setStatus({ type: 'error', message: t('errorMessage') });
             }
         } catch {
-            setStatus({ type: 'error', message: 'Failed to send message.' });
+            setStatus({ type: 'error', message: t('failedMessage') });
         } finally {
             setIsPending(false);
         }
@@ -56,46 +60,71 @@ export default function ContactForm() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Full Name</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('fullName')}</label>
                     <input name="name" required type="text" style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem' }} />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Email Address</label>
-                    <input name="email" required type="email" style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem' }} />
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('emailAddress')}</label>
+                    <input
+                        name="email"
+                        required
+                        type="email"
+                        style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            direction: 'ltr',
+                            textAlign: isRtl ? 'right' : 'left',
+                            unicodeBidi: 'plaintext'
+                        }}
+                    />
                 </div>
             </div>
 
             <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Department</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('department')}</label>
                 <select
                     name="department"
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
                     style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem' }}
                 >
-                    <option value="">General Inquiry</option>
-                    <option value="Export Department">Export Department</option>
-                    <option value="Local Representatives">Local Representatives</option>
-                    <option value="Technical Support">Technical Support</option>
+                    <option value="">{t('generalInquiry')}</option>
+                    <option value="Export Department">{t('exportDepartment')}</option>
+                    <option value="Local Representatives">{t('localRepresentatives')}</option>
+                    <option value="Technical Support">{t('technicalSupport')}</option>
                 </select>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Phone Number</label>
-                    <input name="phone" type="tel" style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem' }} />
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('phoneNumber')}</label>
+                    <input
+                        name="phone"
+                        type="tel"
+                        style={{
+                            width: '100%',
+                            padding: '0.9rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: '0.5rem',
+                            direction: 'ltr',
+                            textAlign: isRtl ? 'right' : 'left',
+                            unicodeBidi: 'plaintext'
+                        }}
+                    />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Subject</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('subject')}</label>
                     <input name="subject" type="text" style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem' }} />
                 </div>
             </div>
             <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>Message</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>{t('message')}</label>
                 <textarea name="message" required rows={5} style={{ width: '100%', padding: '0.9rem', border: '1px solid var(--border)', borderRadius: '0.5rem', fontFamily: 'inherit' }}></textarea>
             </div>
             <button type="submit" disabled={isPending} className="btn btn-primary" style={{ padding: '1.1rem', fontSize: '1rem' }}>
-                {isPending ? 'Sending...' : 'Send Message'}
+                {isPending ? t('sending') : t('sendMessage')}
             </button>
         </form>
     );

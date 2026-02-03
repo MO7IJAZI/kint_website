@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import FileUpload from "./FileUpload";
+import { useTranslations } from 'next-intl';
 
 interface DownloadItem {
     id?: string;
@@ -16,6 +17,7 @@ interface DownloadsManagerProps {
 }
 
 export default function DownloadsManager({ initialData, onChange }: DownloadsManagerProps) {
+    const t = useTranslations('AdminDownloads');
     const [downloads, setDownloads] = useState<DownloadItem[]>(initialData || []);
 
     const addDownload = () => {
@@ -40,7 +42,7 @@ export default function DownloadsManager({ initialData, onChange }: DownloadsMan
 
     return (
         <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '700', fontSize: '0.85rem', color: 'var(--foreground)', opacity: 0.8 }}>PRODUCT DOWNLOADS (SDS, LABELS, BROCHURES)</label>
+            <label style={{ display: 'block', marginBottom: '1rem', fontWeight: '700', fontSize: '0.85rem', color: 'var(--foreground)', opacity: 0.8 }}>{t('title')}</label>
 
             <div style={{ display: 'grid', gap: '1.5rem' }}>
                 {downloads.map((item, index) => (
@@ -65,39 +67,39 @@ export default function DownloadsManager({ initialData, onChange }: DownloadsMan
                                 fontWeight: 'bold'
                             }}
                         >
-                            REMOVE
+                            {t('remove')}
                         </button>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '1.5rem', marginBottom: '1.5rem' }}>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>DOCUMENT TITLE</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>{t('docTitle')}</label>
                                 <input 
                                     className="input" 
                                     style={{ width: '100%', backgroundColor: 'white' }}
-                                    placeholder="e.g. Safety Data Sheet 2025"
+                                    placeholder={t('placeholder')}
                                     value={item.title}
                                     onChange={(e) => updateDownload(index, 'title', e.target.value)}
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>TYPE</label>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.75rem', fontWeight: '600' }}>{t('type')}</label>
                                 <select 
                                     className="input" 
                                     style={{ width: '100%', backgroundColor: 'white' }}
                                     value={item.type}
                                     onChange={(e) => updateDownload(index, 'type', e.target.value)}
                                 >
-                                    <option value="Label">Label</option>
-                                    <option value="SDS">SDS (Safety Data Sheet)</option>
-                                    <option value="Brochure">Brochure</option>
-                                    <option value="Certificate">Certificate</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Label">{t('types.Label')}</option>
+                                    <option value="SDS">{t('types.SDS')}</option>
+                                    <option value="Brochure">{t('types.Brochure')}</option>
+                                    <option value="Certificate">{t('types.Certificate')}</option>
+                                    <option value="Other">{t('types.Other')}</option>
                                 </select>
                             </div>
                         </div>
 
                         <FileUpload 
-                            label="PDF FILE"
+                            label={t('file')}
                             value={item.fileUrl}
                             onChange={(url) => updateDownload(index, 'fileUrl', url)}
                         />
@@ -111,7 +113,7 @@ export default function DownloadsManager({ initialData, onChange }: DownloadsMan
                 className="btn btn-outline"
                 style={{ width: '100%', marginTop: '1rem', borderStyle: 'dashed', justifyContent: 'center' }}
             >
-                + ADD DOCUMENT
+                + {t('add')}
             </button>
         </div>
     );

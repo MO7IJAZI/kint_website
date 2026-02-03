@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import './ImageManager.css'
 
@@ -19,25 +19,16 @@ interface ImageManagerProps {
 }
 
 export default function ImageManager({ contentHtml, onImageUpdate }: ImageManagerProps) {
-  const [images, setImages] = useState<ImageData[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [editingImage, setEditingImage] = useState<ImageData | null>(null)
-  const [isClient, setIsClient] = useState(false)
+  const images = useMemo<ImageData[]>(() => {
+    if (typeof DOMParser === 'undefined') return []
 
-  // Only run effect on client side
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Extract images from HTML content
-  useEffect(() => {
-    if (!isClient || typeof document === 'undefined') return
-    
     const parser = new DOMParser()
     const doc = parser.parseFromString(contentHtml, 'text/html')
     const imgElements = doc.querySelectorAll('img')
-    
-    const extractedImages: ImageData[] = Array.from(imgElements).map((img, index) => ({
+
+    return Array.from(imgElements).map((img, index) => ({
       src: img.src || '',
       alt: img.alt || '',
       title: img.title || '',
@@ -45,10 +36,14 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
       height: img.height ? parseInt(img.height.toString()) : undefined,
       index,
     }))
+  }, [contentHtml])
 
-    setImages(extractedImages)
-    setSelectedImageIndex(null)
-  }, [contentHtml, isClient])
+  const safeSelectedImageIndex =
+    selectedImageIndex !== null && selectedImageIndex >= 0 && selectedImageIndex < images.length
+      ? selectedImageIndex
+      : null
+
+  const selectedImage = safeSelectedImageIndex !== null ? images[safeSelectedImageIndex] : null
 
   // Update image in HTML
   const updateImageInHTML = (imageIndex: number, newImage: ImageData) => {
@@ -72,9 +67,6 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
       const bodyContent = bodyMatch ? bodyMatch[1] : updatedHTML
 
       onImageUpdate(bodyContent)
-      setImages((prev) =>
-        prev.map((img, idx) => (idx === imageIndex ? newImage : img))
-      )
     }
   }
 
@@ -93,7 +85,6 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
       const bodyContent = bodyMatch ? bodyMatch[1] : updatedHTML
 
       onImageUpdate(bodyContent)
-      setImages((prev) => prev.filter((_, idx) => idx !== imageIndex))
       setSelectedImageIndex(null)
     }
   }
@@ -193,18 +184,18 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
           </div>
 
           {/* Image Editor Panel */}
-          {selectedImageIndex !== null && images[selectedImageIndex] && (
+          {selectedImage && safeSelectedImageIndex !== null && (
             <div className="image-editor-panel">
-              <h4>Edit Image #{selectedImageIndex + 1}</h4>
+              <h4>Edit Image #{safeSelectedImageIndex + 1}</h4>
               
               <div className="editor-section">
                 <label>URL</label>
                 <input
                   type="text"
-                  value={editingImage?.src || images[selectedImageIndex].src}
+                  value={editingImage?.src || selectedImage.src}
                   onChange={(e) =>
                     setEditingImage({
-                      ...images[selectedImageIndex],
+                      ...selectedImage,
                       src: e.target.value,
                     })
                   }
@@ -216,10 +207,10 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                 <label>Alt Text</label>
                 <input
                   type="text"
-                  value={editingImage?.alt || images[selectedImageIndex].alt}
+                  value={editingImage?.alt || selectedImage.alt}
                   onChange={(e) =>
                     setEditingImage({
-                      ...images[selectedImageIndex],
+                      ...selectedImage,
                       alt: e.target.value,
                     })
                   }
@@ -231,10 +222,10 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                 <label>Title</label>
                 <input
                   type="text"
-                  value={editingImage?.title || images[selectedImageIndex].title}
+                  value={editingImage?.title || selectedImage.title}
                   onChange={(e) =>
                     setEditingImage({
-                      ...images[selectedImageIndex],
+                      ...selectedImage,
                       title: e.target.value,
                     })
                   }
@@ -247,10 +238,10 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                   <label>Width (px)</label>
                   <input
                     type="number"
-                    value={editingImage?.width || images[selectedImageIndex].width || ''}
+                    value={editingImage?.width || selectedImage.width || ''}
                     onChange={(e) =>
                       setEditingImage({
-                        ...images[selectedImageIndex],
+                        ...selectedImage,
                         width: e.target.value ? parseInt(e.target.value) : undefined,
                       })
                     }
@@ -263,10 +254,10 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                   <label>Height (px)</label>
                   <input
                     type="number"
-                    value={editingImage?.height || images[selectedImageIndex].height || ''}
+                    value={editingImage?.height || selectedImage.height || ''}
                     onChange={(e) =>
                       setEditingImage({
-                        ...images[selectedImageIndex],
+                        ...selectedImage,
                         height: e.target.value ? parseInt(e.target.value) : undefined,
                       })
                     }
@@ -281,7 +272,7 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                   className="btn btn-primary"
                   onClick={() => {
                     if (editingImage) {
-                      updateImageInHTML(selectedImageIndex, editingImage)
+                      updateImageInHTML(safeSelectedImageIndex, editingImage)
                       setEditingImage(null)
                     }
                   }}
@@ -301,23 +292,23 @@ export default function ImageManager({ contentHtml, onImageUpdate }: ImageManage
                 <div className="position-buttons">
                   <button
                     className="btn btn-sm btn-outline"
-                    onClick={() => moveImageUp(selectedImageIndex)}
-                    disabled={selectedImageIndex === 0}
+                    onClick={() => moveImageUp(safeSelectedImageIndex)}
+                    disabled={safeSelectedImageIndex === 0}
                     title="Move image up"
                   >
                     ↑ Move Up
                   </button>
                   <button
                     className="btn btn-sm btn-outline"
-                    onClick={() => moveImageDown(selectedImageIndex)}
-                    disabled={selectedImageIndex >= images.length - 1}
+                    onClick={() => moveImageDown(safeSelectedImageIndex)}
+                    disabled={safeSelectedImageIndex >= images.length - 1}
                     title="Move image down"
                   >
                     ↓ Move Down
                   </button>
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => deleteImageFromHTML(selectedImageIndex)}
+                    onClick={() => deleteImageFromHTML(safeSelectedImageIndex)}
                     title="Delete image"
                   >
                     🗑️ Delete

@@ -5,9 +5,12 @@ import { revalidatePath } from "next/cache";
 
 export async function createBlogPost(formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const slug = formData.get("slug") as string;
     const excerpt = formData.get("excerpt") as string;
+    const excerpt_ar = formData.get("excerpt_ar") as string;
     const content = formData.get("content") as string;
+    const content_ar = formData.get("content_ar") as string;
     const author = formData.get("author") as string;
     const image = formData.get("image") as string;
     const tagsRaw = formData.get("tags") as string;
@@ -23,9 +26,12 @@ export async function createBlogPost(formData: FormData) {
     await prisma.blogPost.create({
         data: {
             title,
+            title_ar,
             slug,
             excerpt,
+            excerpt_ar,
             content,
+            content_ar,
             author,
             image,
             tags,
@@ -42,9 +48,12 @@ export async function createBlogPost(formData: FormData) {
 
 export async function updateBlogPost(id: string, formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const slug = formData.get("slug") as string;
     const excerpt = formData.get("excerpt") as string;
+    const excerpt_ar = formData.get("excerpt_ar") as string;
     const content = formData.get("content") as string;
+    const content_ar = formData.get("content_ar") as string;
     const author = formData.get("author") as string;
     const image = formData.get("image") as string;
     const tagsRaw = formData.get("tags") as string;
@@ -63,9 +72,12 @@ export async function updateBlogPost(id: string, formData: FormData) {
         where: { id },
         data: {
             title,
+            title_ar,
             slug,
             excerpt,
+            excerpt_ar,
             content,
+            content_ar,
             author,
             image,
             tags,

@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, content, address, latitude, longitude } = body;
+    const { title, title_ar, content, content_ar, address, address_ar, latitude, longitude } = body;
 
     const existing = await prisma.headquarter.findFirst();
 
@@ -26,8 +26,11 @@ export async function POST(request: Request) {
 
     const data = {
       title: title || 'Company Headquarter',
+      title_ar,
       content,
+      content_ar,
       address,
+      address_ar,
       latitude: Number.isFinite(latitudeValue) ? latitudeValue : null,
       longitude: Number.isFinite(longitudeValue) ? longitudeValue : null,
     };

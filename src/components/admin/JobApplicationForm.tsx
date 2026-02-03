@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface JobApplicationFormProps {
     jobOfferId: string;
@@ -10,6 +11,9 @@ interface JobApplicationFormProps {
 }
 
 export default function JobApplicationForm({ jobOfferId, jobTitle, onClose, onSuccess }: JobApplicationFormProps) {
+    const t = useTranslations("JobApplication");
+    const locale = useLocale();
+    const isRtl = locale === 'ar';
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -35,10 +39,10 @@ export default function JobApplicationForm({ jobOfferId, jobTitle, onClose, onSu
                 }, 2000);
             } else {
                 const data = await res.json();
-                setError(data.error || "Failed to submit application");
+                setError(data.error || t("failedToSubmit"));
             }
         } catch {
-            setError("An error occurred. Please try again.");
+            setError(t("errorOccurred"));
         } finally {
             setLoading(false);
         }
@@ -46,15 +50,15 @@ export default function JobApplicationForm({ jobOfferId, jobTitle, onClose, onSu
 
     if (success) {
         return (
-            <div className="application-success">
+            <div className="application-success" dir={isRtl ? 'rtl' : 'ltr'}>
                 <div className="success-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <h3>Application Sent!</h3>
-                <p>We will review your application for <strong>{jobTitle}</strong> and contact you soon.</p>
-                <button onClick={onSuccess} className="btn-close-success">OK</button>
+                <h3>{t("applicationSent")}</h3>
+                <p>{t("reviewMessage", { jobTitle: jobTitle })}</p>
+                <button onClick={onSuccess} className="btn-close-success">{t("ok")}</button>
                 <style jsx>{`
                     .application-success {
                         text-align: center;
@@ -100,9 +104,9 @@ export default function JobApplicationForm({ jobOfferId, jobTitle, onClose, onSu
     }
 
     return (
-        <div className="application-form">
+        <div className="application-form" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="form-header">
-                <h3>Apply Now</h3>
+                <h3>{t("title", { jobTitle: "" })}</h3>
                 <span className="job-title">{jobTitle}</span>
                 <button onClick={onClose} className="btn-close">×</button>
             </div>
@@ -110,47 +114,53 @@ export default function JobApplicationForm({ jobOfferId, jobTitle, onClose, onSu
             <form onSubmit={handleSubmit}>
                 <div className="form-row">
                     <div className="form-group">
-                        <label>First Name *</label>
-                        <input type="text" name="firstName" required placeholder="John" />
+                        <label>{t("fullName")} *</label>
+                        <input type="text" name="firstName" required placeholder={isRtl ? "الاسم الأول" : "John"} />
                     </div>
                     <div className="form-group">
-                        <label>Last Name *</label>
-                        <input type="text" name="lastName" required placeholder="Doe" />
+                        <label>&nbsp;</label>
+                        <input type="text" name="lastName" required placeholder={isRtl ? "اسم العائلة" : "Doe"} />
                     </div>
                 </div>
 
                 <div className="form-row">
                     <div className="form-group">
-                        <label>Email *</label>
-                        <input type="email" name="email" required placeholder="john@example.com" />
+                        <label>{t("email")} *</label>
+                        <input type="email" name="email" required placeholder="john@example.com" style={{ direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }} />
                     </div>
                     <div className="form-group">
-                        <label>Phone</label>
-                        <input type="tel" name="phone" placeholder="+1 234 567 8900" />
+                        <label>{t("phone")}</label>
+                        <input type="tel" name="phone" placeholder="+1 234 567 8900" style={{ direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }} />
                     </div>
                 </div>
 
                 <div className="form-group">
                     <label>LinkedIn URL</label>
-                    <input type="url" name="linkedIn" placeholder="linkedin.com/in/yourprofile" />
+                    <input type="url" name="linkedIn" placeholder="linkedin.com/in/yourprofile" style={{ direction: 'ltr', textAlign: isRtl ? 'right' : 'left' }} />
                 </div>
 
                 <div className="form-group">
-                    <label>CV Link *</label>
-                    <input type="url" name="cvUrl" required placeholder="Drive, Dropbox or website link" />
+                    <label>{t("cv")} (PDF, DOC) *</label>
+                    <input 
+                        type="file" 
+                        name="cvFile" 
+                        accept=".pdf,.doc,.docx" 
+                        required 
+                        className="file-input"
+                    />
                 </div>
 
                 <div className="form-group">
-                    <label>Cover Letter (optional)</label>
-                    <textarea name="coverLetter" rows={2} placeholder="Brief introduction..." />
+                    <label>{t("coverLetter")} (optional)</label>
+                    <textarea name="coverLetter" rows={2} placeholder="..." />
                 </div>
 
                 {error && <div className="error-message">{error}</div>}
 
                 <div className="form-actions">
-                    <button type="button" onClick={onClose} className="btn-cancel">Cancel</button>
+                    <button type="button" onClick={onClose} className="btn-cancel">{t("cancel")}</button>
                     <button type="submit" disabled={loading} className="btn-submit">
-                        {loading ? "Sending..." : "Send Application"}
+                        {loading ? t("sending") : t("submitApplication")}
                     </button>
                 </div>
             </form>

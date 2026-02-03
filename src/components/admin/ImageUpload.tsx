@@ -44,9 +44,10 @@ export default function ImageUpload({ value, onChange, label }: ImageUploadProps
         <div style={{ marginBottom: '1.5rem' }}>
             {label && <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '700', fontSize: '0.85rem' }}>{label}</label>}
 
-            <div style={{
+            <div className="image-upload-row" style={{
                 display: 'flex',
                 alignItems: 'center',
+                flexWrap: 'wrap',
                 gap: '2rem',
                 padding: '1.5rem',
                 backgroundColor: '#f8fafc',
@@ -112,6 +113,14 @@ export default function ImageUpload({ value, onChange, label }: ImageUploadProps
                     </button>
                 )}
             </div>
+            <style>{`
+              @media (max-width: 520px) {
+                .image-upload-row {
+                  gap: 1rem !important;
+                  padding: 1rem !important;
+                }
+              }
+            `}</style>
         </div>
     );
 }

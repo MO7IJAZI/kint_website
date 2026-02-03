@@ -5,16 +5,20 @@ import { revalidatePath } from "next/cache";
 
 export async function createPage(formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const slug = formData.get("slug") as string;
     const content = formData.get("content") as string;
+    const content_ar = formData.get("content_ar") as string;
     const template = formData.get("template") as string;
     const isActive = formData.get("isActive") === "true";
 
     await prisma.page.create({
         data: {
             title,
+            title_ar,
             slug,
             content,
+            content_ar,
             template,
             isActive,
         },
@@ -27,8 +31,10 @@ export async function createPage(formData: FormData) {
 
 export async function updatePage(id: string, formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const slug = formData.get("slug") as string;
     const content = formData.get("content") as string;
+    const content_ar = formData.get("content_ar") as string;
     const template = formData.get("template") as string;
     const isActive = formData.get("isActive") === "true";
 
@@ -38,8 +44,10 @@ export async function updatePage(id: string, formData: FormData) {
         where: { id },
         data: {
             title,
+            title_ar,
             slug,
             content,
+            content_ar,
             template,
             isActive,
         },

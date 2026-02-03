@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, description, imageUrl, isActive, order } = body;
+    const { title, title_ar, description, description_ar, imageUrl, isActive, order } = body;
 
     if (!title || !imageUrl) {
       return NextResponse.json(
@@ -32,7 +32,9 @@ export async function POST(request: NextRequest) {
     const award = await prisma.award.create({
       data: {
         title,
+        title_ar,
         description,
+        description_ar,
         imageUrl,
         isActive: isActive ?? true,
         order: order ?? 0,

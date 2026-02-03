@@ -1,9 +1,9 @@
 "use client";
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link, usePathname, useRouter } from '@/navigation';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { 
     ChevronDown, 
     ChevronRight, 
@@ -11,12 +11,8 @@ import {
     Search, 
     Menu, 
     X,
-    Leaf,
     Sprout,
-    Droplets,
     FlaskConical,
-    Wheat,
-    Tractor,
     Microscope,
     Factory,
     Truck,
@@ -41,72 +37,114 @@ interface NavItem {
     subItems?: SubItem[];
 }
 
-export default function Header() {
+type ProductCategoryNavChild = {
+    id: string;
+    name: string;
+    name_ar: string | null;
+    slug: string;
+};
+
+type ProductCategoryNav = {
+    id: string;
+    name: string;
+    name_ar: string | null;
+    slug: string;
+    description: string | null;
+    description_ar: string | null;
+    children?: ProductCategoryNavChild[];
+};
+
+type HeaderProps = {
+    productCategories: ProductCategoryNav[];
+};
+
+export default function Header({ productCategories }: HeaderProps) {
+    const t = useTranslations('Navigation');
+    const locale = useLocale();
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [activeNestedDropdown, setActiveNestedDropdown] = useState<string | null>(null);
     const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const pathname = usePathname();
+    const router = useRouter();
+
+    const switchLocale = (nextLocale: string) => {
+        router.replace(pathname, {locale: nextLocale});
+    };
+
+    const productOfferSubItems: SubItem[] = (productCategories ?? []).map((category) => {
+        const name = locale === 'ar' ? (category.name_ar || category.name) : category.name;
+        const description = locale === 'ar'
+            ? (category.description_ar || category.description)
+            : category.description;
+
+        const children = category.children ?? [];
+        const subItems = children.length
+            ? children.map((child) => ({
+                name: locale === 'ar' ? (child.name_ar || child.name) : child.name,
+                href: `/product-category/${child.slug}`,
+            }))
+            : undefined;
+
+        return {
+            name,
+            href: `/product-category/${category.slug}`,
+            description: description || undefined,
+            icon: <Sprout size={18} />,
+            subItems,
+        };
+    });
 
     const navItems: NavItem[] = [
         {
-            name: 'Product Offer',
+            name: t('productOffer'),
             href: '/products',
-            subItems: [
-                { name: 'Biostimulants', href: '/product-category/biostimulants', description: 'Enhance plant growth.', icon: <Sprout size={18} /> },
-                { name: 'Activators', href: '/product-category/activators', description: 'Boost metabolic processes.', icon: <FlaskConical size={18} /> },
-                { name: 'Bioproducts', href: '/product-category/bioproducts', description: 'Natural farming solutions.', icon: <Leaf size={18} /> },
-                { name: 'Foliar Fertilizers', href: '/product-category/foliar-fertilizers', description: 'Direct nutrient delivery.', icon: <Droplets size={18} /> },
-                { name: 'Seed Fertilizers', href: '/product-category/seed-fertilizers', description: 'Start strong with seeds.', icon: <Wheat size={18} /> },
-                { name: 'Fertilizers for Fertigation', href: '/product-category/fertigation', description: 'Irrigation system nutrients.', icon: <Tractor size={18} /> },
-                { name: 'Tank Mix Additives', href: '/product-category/tank-mix-additives', description: 'Improve spray efficiency.', icon: <FlaskConical size={18} /> },
-                { name: 'Organic Farming', href: '/product-category/organic-farming', description: 'Certified organic products.', icon: <Award size={18} /> },
-            ]
+            subItems: productOfferSubItems.length ? productOfferSubItems : undefined
         },
         {
-            name: 'Crop Farming',
+            name: t('cropFarming'),
             href: '/crop-farming',
             subItems: [
-                { name: 'Crop Guides', href: '/crop-farming', description: 'Comprehensive cultivation guides.', icon: <FileText size={18} /> },
+                { name: t('cropGuides'), href: '/crop-farming', description: 'Comprehensive cultivation guides.', icon: <FileText size={18} /> },
                 { 
-                    name: 'Treatment Efficacy', 
+                    name: t('treatmentEfficacy'), 
                     href: '/treatment-efficacy/optimum-conditions', 
-                    description: 'Proven treatment results.', 
+                    description: t('provenTreatmentResults'), 
                     icon: <Microscope size={18} />,
-                    subLink: { name: 'Optimum Conditions for Foliar Treatments', href: '/treatment-efficacy/optimum-conditions' }
+                    subLink: { name: t('optimumConditions'), href: '/treatment-efficacy/optimum-conditions' }
                 },
-                { name: 'Mixing Table 2026', href: '/mixing-table', description: 'Tank mix compatibility guide.', icon: <FlaskConical size={18} /> },
-                { name: 'Experts\' Forum', href: '/experts-forum', description: 'Expert insights & articles.', icon: <Users size={18} /> },
-                { name: 'BioSafeFood Project', href: '/crop-farming/bio-safe-food', description: 'Safe biopreparations research.', icon: <Microscope size={18} /> },
+                { name: t('mixingTable'), href: '/mixing-table', description: 'Tank mix compatibility guide.', icon: <FlaskConical size={18} /> },
+                { name: t('expertsForum'), href: '/experts-forum', description: 'Expert insights & articles.', icon: <Users size={18} /> },
+                { name: t('bioSafeFood'), href: '/crop-farming/bio-safe-food', description: 'Safe biopreparations research.', icon: <Microscope size={18} /> },
             ]
         },
         
         {
-            name: 'About company',
+            name: t('about'),
             href: '/about',
             subItems: [
-                { name: 'Company Profile', href: '/about', icon: <Users size={18} /> },
-                { name: 'R&D Centre', href: '/about/rd-centre', icon: <Microscope size={18} /> },
-                { name: 'Production Plants', href: '/about/production-plants', icon: <Factory size={18} /> },
-                { name: 'Logistics Centre', href: '/about/logistics-centre', icon: <Truck size={18} /> },
-                { name: 'Company Data', href: '/about/company-data', icon: <FileText size={18} /> },
-                { name: 'Career', href: '/about/career', icon: <Users size={18} /> },
-                { name: 'Certificates', href: '/about/certificates', icon: <Award size={18} /> },
-                { name: 'Awards', href: '/about/awards', icon: <Award size={18} /> },
+                { name: t('about'), href: '/about', icon: <Users size={18} /> },
+                { name: t('rdCentre'), href: '/about/rd-centre', icon: <Microscope size={18} /> },
+                { name: t('productionPlants'), href: '/about/production-plants', icon: <Factory size={18} /> },
+                { name: t('logisticsCentre'), href: '/about/logistics-centre', icon: <Truck size={18} /> },
+                { name: t('companyData'), href: '/about/company-data', icon: <FileText size={18} /> },
+                { name: t('career'), href: '/about/career', icon: <Users size={18} /> },
+                { name: t('certificates'), href: '/about/certificates', icon: <Award size={18} /> },
+                { name: t('awards'), href: '/about/awards', icon: <Award size={18} /> },
             ]
         },
-        { name: 'Products for animals', href: '/products-for-animals' },
-        { name: 'News', href: '/blog' },
+        { name: t('productsForAnimals'), href: '/products-for-animals' },
+        { name: t('news'), href: '/blog' },
         {
-            name: 'Contact',
+            name: t('contact'),
             href: '/contact',
             subItems: [
-                { name: 'Company Headquarter', href: '/contact/headquarter', icon: <Factory size={18} /> },
-                { name: 'Export Department', href: '/contact/export-department', icon: <Globe size={18} /> },
-                { name: 'Local Representatives', href: '/contact/local-representatives', icon: <Users size={18} /> },
-                { name: 'Contact Form', href: '/contact', icon: <Mail size={18} /> },
+                { name: t('companyHeadquarter'), href: '/contact/headquarter', icon: <Factory size={18} /> },
+                { name: t('exportDepartment'), href: '/contact/export-department', icon: <Globe size={18} /> },
+                { name: t('localRepresentatives'), href: '/contact/local-representatives', icon: <Users size={18} /> },
+                { name: t('contactForm'), href: '/contact', icon: <Mail size={18} /> },
             ]
-        },
+        }
     ];
 
     return (
@@ -222,9 +260,18 @@ export default function Header() {
 
                     <div className="header-actions">
                         <div className="lang-switcher">
-                            <button className="active">EN</button>
-                            <button>PL</button>
-                            <button>RU</button>
+                            <button 
+                                className={locale === 'en' ? 'active' : ''} 
+                                onClick={() => switchLocale('en')}
+                            >
+                                EN
+                            </button>
+                            <button 
+                                className={locale === 'ar' ? 'active' : ''} 
+                                onClick={() => switchLocale('ar')}
+                            >
+                                AR
+                            </button>
                         </div>
                         <Link href="/search" className="search-trigger">
                             <Search size={20} />

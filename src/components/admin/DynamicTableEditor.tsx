@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
 
 interface Column {
     key: string;
@@ -14,9 +15,11 @@ interface DynamicTableEditorProps {
     columns: Column[];
     initialData?: Record<string, string>[];
     onChange: (data: Record<string, string>[]) => void;
+    dir?: string;
 }
 
-export default function DynamicTableEditor({ label, columns, initialData, onChange }: DynamicTableEditorProps) {
+export default function DynamicTableEditor({ label, columns, initialData, onChange, dir = 'ltr' }: DynamicTableEditorProps) {
+    const t = useTranslations('AdminTableEditor');
     const [rows, setRows] = useState<Record<string, string>[]>(initialData || []);
 
     const handleCellChange = (index: number, key: string, value: string) => {
@@ -50,13 +53,13 @@ export default function DynamicTableEditor({ label, columns, initialData, onChan
                 overflow: 'hidden',
                 backgroundColor: 'white'
             }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', direction: dir === 'rtl' ? 'rtl' : 'ltr' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                             {columns.map(col => (
                                 <th key={col.key} style={{ 
                                     padding: '0.75rem 1rem', 
-                                    textAlign: 'left', 
+                                    textAlign: dir === 'rtl' ? 'right' : 'left', 
                                     fontSize: '0.75rem', 
                                     fontWeight: '600',
                                     color: 'var(--muted-foreground)',
@@ -83,9 +86,11 @@ export default function DynamicTableEditor({ label, columns, initialData, onChan
                                                 padding: '0.75rem 1rem',
                                                 outline: 'none',
                                                 fontSize: '0.875rem',
-                                                backgroundColor: 'transparent'
+                                                backgroundColor: 'transparent',
+                                                textAlign: dir === 'rtl' ? 'right' : 'left'
                                             }}
-                                            placeholder={`Enter ${col.label.toLowerCase()}...`}
+                                            placeholder={t('enter', { label: col.label.toLowerCase() })}
+                                            dir={dir === 'rtl' ? 'rtl' : undefined}
                                         />
                                     </td>
                                 ))}
@@ -101,7 +106,7 @@ export default function DynamicTableEditor({ label, columns, initialData, onChan
                                             padding: '0.5rem',
                                             fontSize: '1.2rem'
                                         }}
-                                        title="Remove Row"
+                                        title={t('removeRow')}
                                     >
                                         &times;
                                     </button>
@@ -111,7 +116,7 @@ export default function DynamicTableEditor({ label, columns, initialData, onChan
                         {rows.length === 0 && (
                             <tr>
                                 <td colSpan={columns.length + 1} style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>
-                                    No data added yet.
+                                    {t('noData')}
                                 </td>
                             </tr>
                         )}
@@ -124,7 +129,7 @@ export default function DynamicTableEditor({ label, columns, initialData, onChan
                         className="btn btn-outline"
                         style={{ width: '100%', borderStyle: 'dashed', justifyContent: 'center' }}
                     >
-                        + Add Row
+                        {t('addRow')}
                     </button>
                 </div>
             </div>

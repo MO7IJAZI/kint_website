@@ -1,34 +1,54 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import Image from 'next/image';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface Crop {
     id: string;
     name: string;
+    name_ar?: string | null;
     slug: string;
     metaTitle: string | null;
     description: string | null;
+    description_ar?: string | null;
     image: string | null;
 }
 
 export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] }) {
+    const t = useTranslations('CropGuides');
+    const tNav = useTranslations('Navigation');
+    const tContact = useTranslations('Contact');
+    const locale = useLocale();
+    const isRtl = locale === 'ar';
+
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('ALL');
 
-    const tabs = ['ALL', 'ARABLE CROPS', 'VEGETABLE CROPS', 'FRUIT CROPS'];
+    const tabs = [
+        { id: 'ALL', label: t('all') },
+        { id: 'ARABLE CROPS', label: t('arable') },
+        { id: 'VEGETABLE CROPS', label: t('vegetable') },
+        { id: 'FRUIT CROPS', label: t('fruit') }
+    ];
 
     const filteredCrops = useMemo(() => {
         return initialCrops.filter(crop => {
-            const matchesSearch = crop.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const name = (isRtl && crop.name_ar) ? crop.name_ar : crop.name;
+            const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            // Map crop.metaTitle to tab IDs if necessary, or assume direct match
+            // Assuming crop.metaTitle is stored in English in DB
+            // We compare uppercase for consistency
             const matchesTab = activeTab === 'ALL' || (crop.metaTitle?.toUpperCase() === activeTab);
+            
             return matchesSearch && matchesTab;
         });
-    }, [initialCrops, searchQuery, activeTab]);
+    }, [initialCrops, searchQuery, activeTab, isRtl]);
 
     return (
-        <div style={{ backgroundColor: '#fdfdfd', minHeight: '100vh' }}>
+        <div style={{ backgroundColor: '#fdfdfd', minHeight: '100vh' }} dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Page Header */}
             <section style={{
                 padding: '4rem 0 4rem',
@@ -38,26 +58,26 @@ export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] 
             }}>
                 <div className="container">
                     {/* Breadcrumbs */}
-                    <nav style={{ marginBottom: '2rem', fontSize: '0.8rem', color: '#999', fontWeight: 700 }}>
-                        <Link href="/" style={{ color: '#999' }}>HOME</Link> / <span style={{ color: 'var(--primary)' }}>CROP GUIDES</span>
+                    <nav style={{ marginBottom: '2rem', fontSize: '0.8rem', color: '#999', fontWeight: 700, display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+                        <Link href="/" style={{ color: '#999' }}>{tNav('home').toUpperCase()}</Link> / <span style={{ color: 'var(--primary)' }}>{t('title').toUpperCase()}</span>
                     </nav>
                     <h1 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1.5rem', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
-                        CROP <span style={{ color: 'var(--primary)' }}>GUIDES</span>
+                        {t('title').split(' ')[0]} <span style={{ color: 'var(--primary)' }}>{t('title').split(' ').slice(1).join(' ')}</span>
                     </h1>
                     <p style={{ fontSize: '1.1rem', color: '#666', maxWidth: '700px', margin: '0 auto 3rem' }}>
-                        Professional fertilization and biostimulation programs for specific plant species.
+                        {t('subtitle')}
                     </p>
 
                     {/* Search Field */}
                     <div style={{ maxWidth: '600px', margin: '0 auto', position: 'relative' }}>
                         <input
                             type="text"
-                            placeholder="Find your crop..."
+                            placeholder={t('searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '1.25rem 2rem',
+                                padding: isRtl ? '1.25rem 2rem 1.25rem 3.5rem' : '1.25rem 3.5rem 1.25rem 2rem',
                                 borderRadius: '3rem',
                                 border: '1px solid #ddd',
                                 fontSize: '1rem',
@@ -65,7 +85,13 @@ export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] 
                                 boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
                             }}
                         />
-                        <span style={{ position: 'absolute', right: '2rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }}>🔍</span>
+                        <span style={{ 
+                            position: 'absolute', 
+                            [isRtl ? 'left' : 'right']: '2rem', 
+                            top: '50%', 
+                            transform: 'translateY(-50%)', 
+                            opacity: 0.3 
+                        }}>🔍</span>
                     </div>
                 </div>
             </section>
@@ -76,20 +102,21 @@ export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] 
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                         {tabs.map(tab => (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
                                 style={{
                                     padding: '0.75rem 2rem',
                                     borderRadius: '2rem',
                                     fontWeight: 700,
                                     fontSize: '0.85rem',
                                     transition: '0.3s',
-                                    backgroundColor: activeTab === tab ? 'var(--primary)' : 'transparent',
-                                    color: activeTab === tab ? 'white' : '#666',
-                                    border: activeTab === tab ? '1px solid var(--primary)' : '1px solid #ddd'
+                                    backgroundColor: activeTab === tab.id ? 'var(--primary)' : 'transparent',
+                                    color: activeTab === tab.id ? 'white' : '#666',
+                                    border: activeTab === tab.id ? '1px solid var(--primary)' : '1px solid #ddd',
+                                    cursor: 'pointer'
                                 }}
                             >
-                                {tab}
+                                {tab.label.toUpperCase()}
                             </button>
                         ))}
                     </div>
@@ -104,61 +131,64 @@ export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] 
                         gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                         gap: '2.5rem'
                     }}>
-                        {filteredCrops.map((crop) => (
-                            <Link key={crop.id} href={`/crops/${crop.slug}`} className="card crop-card" style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                border: '1px solid #eee',
-                                borderRadius: '1.5rem',
-                                background: 'white',
-                                overflow: 'hidden'
-                            }}>
-                                <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-                                    {crop.image ? (
-                                        <Image
-                                            src={crop.image}
-                                            alt={crop.name}
-                                            fill
-                                            style={{ objectFit: 'cover' }}
-                                            sizes="(max-width: 768px) 100vw, 33vw"
-                                        />
-                                    ) : (
-                                        <div style={{
-                                            height: '100%', width: '100%', backgroundColor: '#f3f4f6',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '4rem'
-                                        }}>
-                                            {crop.metaTitle === 'Arable Crops' ? '🌾' : crop.metaTitle === 'Fruit Crops' ? '🍎' : '🥦'}
-                                        </div>
-                                    )}
-                                </div>
-                                <div style={{ padding: '2rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-                                        {crop.name}
-                                    </h3>
-                                    <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: '2rem' }}>
-                                        Fertilization technology
-                                    </p>
-                                    <div style={{
-                                        marginTop: 'auto',
-                                        padding: '0.75rem 2rem',
-                                        borderRadius: '2rem',
-                                        border: '1px solid #ddd',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 700,
-                                        color: 'var(--primary)',
-                                        transition: '0.3s'
-                                    }} className="view-button">
-                                        VIEW PROGRAM →
+                        {filteredCrops.map((crop) => {
+                            const name = (isRtl && crop.name_ar) ? crop.name_ar : crop.name;
+                            return (
+                                <Link key={crop.id} href={`/crops/${crop.slug}`} className="card crop-card" style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    border: '1px solid #eee',
+                                    borderRadius: '1.5rem',
+                                    background: 'white',
+                                    overflow: 'hidden'
+                                }}>
+                                    <div style={{ position: 'relative', height: '220px', width: '100%' }}>
+                                        {crop.image ? (
+                                            <Image
+                                                src={crop.image}
+                                                alt={name}
+                                                fill
+                                                style={{ objectFit: 'cover' }}
+                                                sizes="(max-width: 768px) 100vw, 33vw"
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                height: '100%', width: '100%', backgroundColor: '#f3f4f6',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '4rem'
+                                            }}>
+                                                {crop.metaTitle === 'Arable Crops' ? '🌾' : crop.metaTitle === 'Fruit Crops' ? '🍎' : '🥦'}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                    <div style={{ padding: '2rem', textAlign: 'center', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                                            {name}
+                                        </h3>
+                                        <p style={{ fontSize: '0.85rem', color: '#888', marginBottom: '2rem' }}>
+                                            {t('subtitle')}
+                                        </p>
+                                        <div style={{
+                                            marginTop: 'auto',
+                                            padding: '0.75rem 2rem',
+                                            borderRadius: '2rem',
+                                            border: '1px solid #ddd',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 700,
+                                            color: 'var(--primary)',
+                                            transition: '0.3s'
+                                        }} className="view-button">
+                                            {t('viewProgram')} {isRtl ? '←' : '→'}
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
                     </div>
 
                     {filteredCrops.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '5rem', color: '#999' }}>
-                            No crops match your search or filter.
+                            {t('noCropsFound')}
                         </div>
                     )}
                 </div>
@@ -179,18 +209,17 @@ export default function CropGuidesList({ initialCrops }: { initialCrops: Crop[] 
                         position: 'relative'
                     }}>
                         <div style={{ maxWidth: '600px', position: 'relative', zIndex: 1 }}>
-                            <h2 style={{ fontSize: '2.5rem', marginBottom: '1.5rem', fontWeight: 800 }}>Need a custom program?</h2>
+                            <h2 style={{ fontSize: '2.5rem', marginBottom: '1.5rem', fontWeight: 800 }}>{t('needCustomProgram')}</h2>
                             <p style={{ fontSize: '1.1rem', opacity: 0.9, marginBottom: '2.5rem', lineHeight: '1.7' }}>
-                                Our agronomists are ready to prepare a personalized fertilization program
-                                adjusted to your local soil conditions and specific crop varieties.
+                                {t('customProgramDesc')}
                             </p>
-                            <Link href="/contact" className="btn" style={{
+                            <Link href={`/contact`} className="btn" style={{
                                 backgroundColor: 'white', color: '#142346', padding: '1.1rem 2.5rem', fontWeight: 700, borderRadius: '1rem'
                             }}>
-                                CONSULT AN EXPERT
+                                {t('consultExpert')}
                             </Link>
                         </div>
-                        <div style={{ fontSize: '10rem', opacity: 0.1, transform: 'rotate(15deg)', position: 'absolute', right: '5rem' }}>🌾</div>
+                        <div style={{ fontSize: '10rem', opacity: 0.1, transform: 'rotate(15deg)', position: 'absolute', [isRtl ? 'left' : 'right']: '5rem' }}>🌾</div>
                     </div>
                 </div>
             </section>

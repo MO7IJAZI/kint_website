@@ -1,25 +1,32 @@
 "use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const locale = useLocale();
+    const t = useTranslations('Admin');
+
+    const switchLocale = (nextLocale: string) => {
+        router.replace(pathname, {locale: nextLocale});
+    };
 
     const menuItems = [
-        { name: 'Dashboard', href: '/admin', icon: '📊' },
-        { name: 'Categories', href: '/admin/categories', icon: '📁' },
-        { name: 'Products', href: '/admin/products', icon: '📦' },
-        { name: 'Crop Guides', href: '/admin/crops', icon: '🌾' },
-        { name: 'Expert Articles', href: '/admin/expert-articles', icon: '🎓' },
-        { name: 'Blog Posts', href: '/admin/blog', icon: '📝' },
-        { name: 'Career', href: '/admin/career', icon: '💼' },
-        { name: 'Applications', href: '/admin/applications', icon: '📬' },
-        { name: 'Certificates', href: '/admin/certificates', icon: '🏆' },
-        { name: 'Awards', href: '/admin/awards', icon: '🎖️' },
-        { name: 'Headquarter', href: '/admin/headquarter', icon: '🏢' },
-        { name: 'Contact Inquiries', href: '/admin/inquiries', icon: '📧' },
-        { name: 'Settings', href: '/admin/settings', icon: '⚙️' },
+        { name: t('dashboard'), href: '/admin', icon: '📊' },
+        { name: t('categories'), href: '/admin/categories', icon: '📁' },
+        { name: t('products'), href: '/admin/products', icon: '📦' },
+        { name: t('cropGuides'), href: '/admin/crops', icon: '🌾' },
+        { name: t('expertArticles'), href: '/admin/expert-articles', icon: '🎓' },
+        { name: t('blogPosts'), href: '/admin/blog', icon: '📝' },
+        { name: t('career'), href: '/admin/career', icon: '💼' },
+        { name: t('applications'), href: '/admin/applications', icon: '📬' },
+        { name: t('certificates'), href: '/admin/certificates', icon: '🏆' },
+        { name: t('awards'), href: '/admin/awards', icon: '🎖️' },
+        { name: t('headquarter'), href: '/admin/headquarter', icon: '🏢' },
+        { name: t('contactInquiries'), href: '/admin/inquiries', icon: '📧' },
+        { name: t('settings'), href: '/admin/settings', icon: '⚙️' },
     ];
 
     return (
@@ -31,25 +38,69 @@ export default function Sidebar() {
             position: 'fixed',
             left: 0,
             top: 0,
-            padding: '2.5rem 1.5rem',
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '4px 0 24px rgba(0,0,0,0.1)',
             zIndex: 100
         }}>
-            <div style={{ padding: '0 0.5rem 3rem', borderBottom: '1px solid rgba(255,255,1,0.1)', marginBottom: '2.5rem' }}>
-                <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ padding: '2.5rem 1.5rem 0.5rem', borderBottom: '1px solid rgba(255,255,1,0.1)', marginBottom: '1rem' }}>
+                <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                     <div style={{
                         width: '40px', height: '40px', backgroundColor: 'var(--primary)',
                         borderRadius: '10px', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', fontWeight: 900, color: 'white'
                     }}>K</div>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '1px' }}>KINT ADMIN</span>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '1px' }}>{t('title')}</span>
                 </Link>
+
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '0.5rem' 
+                }}>
+                    <button 
+                        onClick={() => switchLocale('en')}
+                        style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            borderRadius: '0.5rem',
+                            backgroundColor: locale === 'en' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            transition: '0.3s'
+                        }}
+                    >
+                        EN
+                    </button>
+                    <button 
+                        onClick={() => switchLocale('ar')}
+                        style={{
+                            flex: 1,
+                            padding: '0.5rem',
+                            borderRadius: '0.5rem',
+                            backgroundColor: locale === 'ar' ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            transition: '0.3s'
+                        }}
+                    >
+                        AR
+                    </button>
+                </div>
             </div>
 
-            <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {menuItems.map((item) => {
+            <div style={{ 
+                flex: 1, 
+                overflowY: 'auto', 
+                padding: '0 1.5rem 1.5rem',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(255,255,255,0.1) transparent'
+            }}>
+                <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {menuItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
                     return (
                         <Link
@@ -77,9 +128,10 @@ export default function Sidebar() {
                         </Link>
                     );
                 })}
-            </nav>
+                </nav>
+            </div>
 
-            <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                 <Link
                     href="/"
                     style={{
@@ -95,7 +147,7 @@ export default function Sidebar() {
                         textTransform: 'uppercase'
                     }}
                 >
-                    <span>🏠</span> Back to Site
+                    <span>🏠</span> {t('backToSite')}
                 </Link>
                 <button
                     onClick={() => { }}
@@ -112,7 +164,7 @@ export default function Sidebar() {
                         textTransform: 'uppercase'
                     }}
                 >
-                    <span>🚪</span> Logout
+                    <span>🚪</span> {t('logout')}
                 </button>
             </div>
 

@@ -5,79 +5,136 @@ import { revalidatePath } from "next/cache";
 
 export async function createJobOffer(formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const location = formData.get("location") as string;
+    const location_ar = formData.get("location_ar") as string;
     const workType = formData.get("workType") as string;
+    const workType_ar = formData.get("workType_ar") as string;
     const contractType = formData.get("contractType") as string;
+    const contractType_ar = formData.get("contractType_ar") as string;
     const employmentType = formData.get("employmentType") as string;
+    const employmentType_ar = formData.get("employmentType_ar") as string;
     const companyIntro = formData.get("companyIntro") as string;
+    const companyIntro_ar = formData.get("companyIntro_ar") as string;
     const responsibilities = formData.get("responsibilities") as string;
+    const responsibilities_ar = formData.get("responsibilities_ar") as string;
     const benefits = formData.get("benefits") as string;
+    const benefits_ar = formData.get("benefits_ar") as string;
     const qualifications = formData.get("qualifications") as string;
+    const qualifications_ar = formData.get("qualifications_ar") as string;
     const isActive = formData.get("isActive") === "true";
+    
+    // Parse expiresAt
+    const expiresAtStr = formData.get("expiresAt") as string;
+    const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null;
 
     await prisma.jobOffer.create({
         data: {
             title,
+            title_ar,
             location,
+            location_ar,
             workType,
+            workType_ar,
             contractType,
+            contractType_ar,
             employmentType,
+            employmentType_ar,
             companyIntro,
+            companyIntro_ar,
             responsibilities,
+            responsibilities_ar,
             benefits,
+            benefits_ar,
             qualifications,
+            qualifications_ar,
             isActive,
+            expiresAt,
         },
     });
 
-    revalidatePath("/admin/career");
-    revalidatePath("/about/career");
+    revalidatePath("/[locale]/admin/career", "page");
+    revalidatePath("/[locale]/about/career", "page");
 }
 
 export async function updateJobOffer(id: string, formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const location = formData.get("location") as string;
+    const location_ar = formData.get("location_ar") as string;
     const workType = formData.get("workType") as string;
+    const workType_ar = formData.get("workType_ar") as string;
     const contractType = formData.get("contractType") as string;
+    const contractType_ar = formData.get("contractType_ar") as string;
     const employmentType = formData.get("employmentType") as string;
+    const employmentType_ar = formData.get("employmentType_ar") as string;
     const companyIntro = formData.get("companyIntro") as string;
+    const companyIntro_ar = formData.get("companyIntro_ar") as string;
     const responsibilities = formData.get("responsibilities") as string;
+    const responsibilities_ar = formData.get("responsibilities_ar") as string;
     const benefits = formData.get("benefits") as string;
+    const benefits_ar = formData.get("benefits_ar") as string;
     const qualifications = formData.get("qualifications") as string;
+    const qualifications_ar = formData.get("qualifications_ar") as string;
     const isActive = formData.get("isActive") === "true";
+
+    // Parse expiresAt
+    const expiresAtStr = formData.get("expiresAt") as string;
+    const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null;
 
     await prisma.jobOffer.update({
         where: { id },
         data: {
             title,
+            title_ar,
             location,
+            location_ar,
             workType,
+            workType_ar,
             contractType,
+            contractType_ar,
             employmentType,
+            employmentType_ar,
             companyIntro,
+            companyIntro_ar,
             responsibilities,
+            responsibilities_ar,
             benefits,
+            benefits_ar,
             qualifications,
+            qualifications_ar,
             isActive,
+            expiresAt,
         },
     });
 
-    revalidatePath("/admin/career");
-    revalidatePath("/about/career");
+    revalidatePath("/[locale]/admin/career", "page");
+    revalidatePath("/[locale]/about/career", "page");
 }
 
 export async function deleteJobOffer(id: string) {
-    await prisma.jobOffer.delete({
-        where: { id },
-    });
+    try {
+        await prisma.jobOffer.delete({
+            where: { id },
+        });
 
-    revalidatePath("/admin/career");
-    revalidatePath("/about/career");
+        revalidatePath("/[locale]/admin/career", "page");
+        revalidatePath("/[locale]/about/career", "page");
+    } catch (error) {
+        console.error("Failed to delete job offer:", error);
+        throw error;
+    }
 }
 
 export async function getJobOffers() {
     return await prisma.jobOffer.findMany({
-        where: { isActive: true },
+        where: {
+            isActive: true,
+            OR: [
+                { expiresAt: null },
+                { expiresAt: { gt: new Date() } }
+            ]
+        },
         orderBy: { publishedAt: "desc" },
     });
 }

@@ -24,12 +24,24 @@ export async function createProduct(formData: FormData) {
     const metaTitle = formData.get("metaTitle") as string;
     const metaDesc = formData.get("metaDesc") as string;
 
+    const name_ar = formData.get("name_ar") as string;
+    const description_ar = formData.get("description_ar") as string;
+    const shortDesc_ar = formData.get("shortDesc_ar") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
+    const metaDesc_ar = formData.get("metaDesc_ar") as string;
+    const benefits_ar = formData.get("benefits_ar") as string;
+    const usage_ar = formData.get("usage_ar") as string;
+
     const usageTableStr = formData.get("usageTable") as string;
     const compTableStr = formData.get("compTable") as string;
+    const tabsStr = formData.get("tabs") as string;
+    const tabsArStr = formData.get("tabs_ar") as string;
     const downloadsStr = formData.get("downloads") as string;
 
     const usageTable = usageTableStr ? JSON.parse(usageTableStr) : null;
     const compTable = compTableStr ? JSON.parse(compTableStr) : null;
+    const tabs = tabsStr ? JSON.parse(tabsStr) : null;
+    const tabs_ar = tabsArStr ? JSON.parse(tabsArStr) : null;
     const downloads = downloadsStr ? (JSON.parse(downloadsStr) as DownloadInput[]) : [];
 
     await prisma.product.create({
@@ -47,8 +59,17 @@ export async function createProduct(formData: FormData) {
             usage,
             usageTable,
             compTable,
+            tabs,
+            tabs_ar,
             metaTitle,
             metaDesc,
+            name_ar,
+            description_ar,
+            shortDesc_ar,
+            benefits_ar,
+            usage_ar,
+            metaTitle_ar,
+            metaDesc_ar,
             downloads: {
                 create: downloads.map((d) => ({
                     title: d.title,
@@ -79,13 +100,33 @@ export async function updateProduct(id: string, formData: FormData) {
     const metaTitle = formData.get("metaTitle") as string;
     const metaDesc = formData.get("metaDesc") as string;
 
+    // Arabic Fields
+    const name_ar = formData.get("name_ar") as string;
+    const description_ar = formData.get("description_ar") as string;
+    const shortDesc_ar = formData.get("shortDesc_ar") as string;
+    const benefits_ar = formData.get("benefits_ar") as string;
+    const usage_ar = formData.get("usage_ar") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
+    const metaDesc_ar = formData.get("metaDesc_ar") as string;
+
     const usageTableStr = formData.get("usageTable") as string;
     const compTableStr = formData.get("compTable") as string;
+    const tabsStr = formData.get("tabs") as string;
     const downloadsStr = formData.get("downloads") as string;
+    
+    // Arabic JSON Fields
+    const usageTableArStr = formData.get("usageTable_ar") as string;
+    const compTableArStr = formData.get("compTable_ar") as string;
+    const tabsArStr = formData.get("tabs_ar") as string;
 
     const usageTable = usageTableStr ? JSON.parse(usageTableStr) : null;
     const compTable = compTableStr ? JSON.parse(compTableStr) : null;
+    const tabs = tabsStr ? JSON.parse(tabsStr) : null;
     const downloads = downloadsStr ? (JSON.parse(downloadsStr) as DownloadInput[]) : [];
+    
+    const usageTable_ar = usageTableArStr ? JSON.parse(usageTableArStr) : null;
+    const compTable_ar = compTableArStr ? JSON.parse(compTableArStr) : null;
+    const tabs_ar = tabsArStr ? JSON.parse(tabsArStr) : null;
 
     await prisma.product.update({
         where: { id },
@@ -103,8 +144,20 @@ export async function updateProduct(id: string, formData: FormData) {
             usage,
             usageTable,
             compTable,
+            tabs,
             metaTitle,
             metaDesc,
+            // Arabic Data
+            name_ar,
+            description_ar,
+            shortDesc_ar,
+            benefits_ar,
+            usage_ar,
+            usageTable_ar,
+            compTable_ar,
+            tabs_ar,
+            metaTitle_ar,
+            metaDesc_ar,
             downloads: {
                 deleteMany: {},
                 create: downloads.map((d) => ({

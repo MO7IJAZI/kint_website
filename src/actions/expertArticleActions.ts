@@ -16,29 +16,40 @@ function sanitizeSlug(text: string) {
 
 export async function createExpertArticle(formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const rawSlug = formData.get("slug") as string;
     const slug = sanitizeSlug(rawSlug || title); // Fallback to title if slug is empty
     const excerpt = formData.get("excerpt") as string;
+    const excerpt_ar = formData.get("excerpt_ar") as string;
     const rawContent = formData.get("content") as string;
     const content = formatRichText(rawContent);
+    const rawContentAr = formData.get("content_ar") as string;
+    const content_ar = formatRichText(rawContentAr);
     const image = formData.get("image") as string;
     const category = formData.get("category") as string;
     const metaTitle = formData.get("metaTitle") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
     const metaDesc = formData.get("metaDesc") as string;
+    const metaDesc_ar = formData.get("metaDesc_ar") as string;
     const isPublished = formData.get("isPublished") === "true";
     const order = parseInt(formData.get("order") as string || "0");
 
     const article = await prisma.expertArticle.create({
         data: {
             title,
+            title_ar,
             slug,
             excerpt,
+            excerpt_ar,
             content,
+            content_ar,
             image,
             category,
             order,
             metaTitle,
+            metaTitle_ar,
             metaDesc,
+            metaDesc_ar,
             isPublished,
             publishedAt: isPublished ? new Date() : null,
         },
@@ -65,15 +76,21 @@ export async function createExpertArticle(formData: FormData) {
 
 export async function updateExpertArticle(id: string, formData: FormData) {
     const title = formData.get("title") as string;
+    const title_ar = formData.get("title_ar") as string;
     const rawSlug = formData.get("slug") as string;
     const slug = sanitizeSlug(rawSlug || title);
     const excerpt = formData.get("excerpt") as string;
+    const excerpt_ar = formData.get("excerpt_ar") as string;
     const rawContent = formData.get("content") as string;
     const content = formatRichText(rawContent);
+    const rawContentAr = formData.get("content_ar") as string;
+    const content_ar = formatRichText(rawContentAr);
     const image = formData.get("image") as string;
     const category = formData.get("category") as string;
     const metaTitle = formData.get("metaTitle") as string;
+    const metaTitle_ar = formData.get("metaTitle_ar") as string;
     const metaDesc = formData.get("metaDesc") as string;
+    const metaDesc_ar = formData.get("metaDesc_ar") as string;
     const isPublished = formData.get("isPublished") === "true";
     const order = parseInt(formData.get("order") as string || "0");
 
@@ -83,14 +100,19 @@ export async function updateExpertArticle(id: string, formData: FormData) {
         where: { id },
         data: {
             title,
+            title_ar,
             slug,
             excerpt,
+            excerpt_ar,
             content,
+            content_ar,
             image,
             category,
             order,
             metaTitle,
+            metaTitle_ar,
             metaDesc,
+            metaDesc_ar,
             isPublished,
             publishedAt: isPublished && !article?.publishedAt ? new Date() : article?.publishedAt,
         },
@@ -156,9 +178,9 @@ export async function getExpertArticlesByCategory() {
     
     // Group by category
     const grouped = {
-        arable: articles.filter((article) => article.category === 'arable'),
-        fruit: articles.filter((article) => article.category === 'fruit'),
-        vegetable: articles.filter((article) => article.category === 'vegetable'),
+        arable: articles.filter((article: any) => article.category === 'arable'),
+        fruit: articles.filter((article: any) => article.category === 'fruit'),
+        vegetable: articles.filter((article: any) => article.category === 'vegetable'),
     };
     
     return grouped;

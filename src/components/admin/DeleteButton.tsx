@@ -9,14 +9,18 @@ import { deleteExpertArticle } from "@/actions/expertArticleActions";
 import { deletePage } from "@/actions/pageActions";
 import { deleteJobOffer } from "@/actions/jobOfferActions";
 import { useState } from "react";
+import { useTranslations } from 'next-intl';
+import { useRouter } from "next/navigation";
 
 type DeleteType = 'product' | 'category' | 'blog' | 'crop' | 'inquiry' | 'expert-article' | 'page' | 'job-offer';
 
 export default function DeleteButton({ id, type }: { id: string, type: DeleteType }) {
     const [isDeleting, setIsDeleting] = useState(false);
+    const t = useTranslations('AdminCommon');
+    const router = useRouter();
 
     async function handleDelete() {
-        if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+        if (!confirm(t('confirmDelete'))) return;
 
         setIsDeleting(true);
         try {
@@ -30,8 +34,10 @@ export default function DeleteButton({ id, type }: { id: string, type: DeleteTyp
                 case 'page': await deletePage(id); break;
                 case 'job-offer': await deleteJobOffer(id); break;
             }
-        } catch {
-            alert(`Failed to delete ${type}`);
+            router.refresh();
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert(`Failed to delete ${type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsDeleting(false);
         }
@@ -43,7 +49,7 @@ export default function DeleteButton({ id, type }: { id: string, type: DeleteTyp
             disabled={isDeleting}
             style={{ color: '#ef4444', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer' }}
         >
-            {isDeleting ? '...' : 'Delete'}
+            {isDeleting ? '...' : t('delete')}
         </button>
     );
 }

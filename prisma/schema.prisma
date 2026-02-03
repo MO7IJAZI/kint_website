@@ -27,8 +27,10 @@ model Admin {
 model Category {
   id          String    @id @default(cuid())
   name        String
+  name_ar     String
   slug        String    @unique
   description String?   @db.Text
+  description_ar String? @db.Text
   image       String?
   icon        String?   // Added as per plan
   parentId    String?
@@ -59,6 +61,7 @@ model Product {
   composition String?  @db.Text
   usageTable  Json?    // Added as per plan (Dosage/Stage)
   compTable   Json?    // Added as per plan (Nutrients)
+  tabs        Json?    // Dynamic tabs for product info
   image       String?
   images      ProductImage[]
   downloads   Download[]     // Added as per plan
@@ -69,7 +72,22 @@ model Product {
   isActive    Boolean  @default(true)
   order       Int      @default(0)
   metaTitle   String?
+  metaTitle_ar String?
   metaDesc    String?  @db.Text
+  metaDesc_ar String?  @db.Text
+  
+  // Arabic Content
+  name_ar        String?
+  description_ar String?  @db.Text
+  shortDesc_ar   String?  @db.Text
+  features_ar    String?  @db.Text
+  benefits_ar    String?  @db.Text
+  usage_ar       String?  @db.Text
+  composition_ar String?  @db.Text
+  usageTable_ar  Json?
+  compTable_ar   Json?
+  tabs_ar        Json?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   crops       Crop[]   @relation("CropRecommendedProducts")
@@ -112,8 +130,11 @@ model Download {
 model Headquarter {
   id          String   @id @default(cuid())
   title       String   @default("Company Headquarter")
+  title_ar    String?  @default("مقر الشركة")
   content     String?  @db.Text
+  content_ar  String?  @db.Text
   address     String?
+  address_ar  String?
   latitude    Float?
   longitude   Float?
   updatedAt   DateTime @updatedAt
@@ -121,17 +142,40 @@ model Headquarter {
   @@map("headquarters")
 }
 
+// Company Data Model (Registration, VAT, etc.)
+model CompanyData {
+  id          String   @id @default(cuid())
+  companyName String   @default("KINT Kafri International")
+  companyName_ar String? @default("KINT Kafri International")
+  address     String?  @db.Text
+  address_ar  String?  @db.Text
+  courtInfo   String?  @db.Text
+  courtInfo_ar String? @db.Text
+  ncrNumber   String?  @default("0000100441")
+  vatNumber   String?  @default("PL 637-011-20-65")
+  capital     String?  @default("PLN 177 000")
+  capital_ar  String?  @default("PLN 177 000")
+  
+  updatedAt   DateTime @updatedAt
+
+  @@map("company_data")
+}
+
 // Crop Model
 model Crop {
   id          String      @id @default(cuid())
   name        String
+  name_ar     String?
   slug        String      @unique
+  harvestSeason_ar String?
   image             String?
   pdfUrl            String?
   description       String?     @db.Text
+  description_ar    String?     @db.Text
   stages      CropStage[]
   isActive          Boolean     @default(true)
   metaTitle         String?
+  metaTitle_ar      String?
   recommendedProducts Product[]  @relation("CropRecommendedProducts")
   createdAt         DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -144,6 +188,7 @@ model Crop {
 model CropStage {
   id             String   @id @default(cuid())
   name           String
+  name_ar        String?
   order          Int      @default(0)
   cropId         String
   crop           Crop     @relation(fields: [cropId], references: [id], onDelete: Cascade)
@@ -159,16 +204,21 @@ model CropStage {
 model BlogPost {
   id          String   @id @default(cuid())
   title       String
+  title_ar    String?
   slug        String   @unique
   excerpt     String?  @db.Text
+  excerpt_ar  String?  @db.Text
   content     String   @db.LongText
+  content_ar  String?  @db.LongText
   image       String?
   author      String
   tags        String?  @db.Text // JSON array stored as text
   isPublished Boolean  @default(false)
   publishedAt DateTime?
   metaTitle   String?
+  metaTitle_ar String?
   metaDesc    String?  @db.Text
+  metaDesc_ar String?  @db.Text
   views       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -183,8 +233,10 @@ model BlogPost {
 model Page {
   id        String   @id @default(cuid())
   title     String
+  title_ar  String?
   slug      String   @unique
   content   String   @db.LongText
+  content_ar String? @db.LongText
   template  String   @default("default")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -225,16 +277,21 @@ model Setting {
 model ExpertArticle {
   id          String   @id @default(cuid())
   title       String
+  title_ar    String?
   slug        String   @unique
   excerpt     String?  @db.Text
+  excerpt_ar  String?  @db.Text
   content     String   @db.LongText
+  content_ar  String?  @db.LongText
   image       String?
   category    String   // arable, fruit, vegetable
   order       Int      @default(0)
   isPublished Boolean  @default(true)
   publishedAt DateTime?
   metaTitle   String?
+  metaTitle_ar String?
   metaDesc    String?  @db.Text
+  metaDesc_ar String?  @db.Text
   views       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -250,15 +307,25 @@ model ExpertArticle {
 model JobOffer {
   id            String   @id @default(cuid())
   title         String
+  title_ar      String?
   location      String?
+  location_ar   String?
   workType      String?
+  workType_ar   String?
   contractType  String?
+  contractType_ar String?
   employmentType String?
+  employmentType_ar String?
   companyIntro  String?  @db.Text
+  companyIntro_ar String? @db.Text
   responsibilities String? @db.Text
+  responsibilities_ar String? @db.Text
   benefits      String?  @db.Text
+  benefits_ar   String?  @db.Text
   qualifications String? @db.Text
+  qualifications_ar String? @db.Text
   isActive      Boolean  @default(true)
+  expiresAt     DateTime?
   publishedAt   DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -297,7 +364,9 @@ model JobApplication {
 model Certificate {
   id          String   @id @default(cuid())
   title       String
+  title_ar    String?
   description String?  @db.Text
+  description_ar String? @db.Text
   imageUrl    String
   order       Int      @default(0)
   isActive    Boolean  @default(true)
@@ -313,7 +382,9 @@ model Certificate {
 model Award {
   id          String   @id @default(cuid())
   title       String
+  title_ar    String?
   description String?  @db.Text
+  description_ar String? @db.Text
   imageUrl    String
   order       Int      @default(0)
   isActive    Boolean  @default(true)
@@ -323,4 +394,25 @@ model Award {
   @@index([order])
   @@index([isActive])
   @@map("awards")
+}
+
+// PDF Document Model for managing downloadable files
+model Document {
+  id          String   @id @default(cuid())
+  title       String
+  title_ar    String?
+  slug        String   @unique
+  description String?  @db.Text
+  description_ar String? @db.Text
+  filePath    String   // Path to the uploaded PDF file
+  category    String   // optimum-conditions, mixing-table, etc.
+  isActive    Boolean  @default(true)
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([isActive])
+  @@map("documents")
 }

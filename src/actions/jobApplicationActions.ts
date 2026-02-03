@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
 export async function createJobApplication(formData: FormData) {
     const jobOfferId = formData.get("jobOfferId") as string;
@@ -11,8 +13,27 @@ export async function createJobApplication(formData: FormData) {
     const phone = formData.get("phone") as string;
     const address = formData.get("address") as string;
     const linkedIn = formData.get("linkedIn") as string;
-    const cvUrl = formData.get("cvUrl") as string;
     const coverLetter = formData.get("coverLetter") as string;
+    
+    // Handle CV File Upload
+    const cvFile = formData.get("cvFile") as File;
+    let cvUrl = "";
+
+    if (cvFile && cvFile.size > 0) {
+        const buffer = Buffer.from(await cvFile.arrayBuffer());
+        const filename = Date.now() + "-" + cvFile.name.replace(/\s+/g, "-");
+        const uploadDir = path.join(process.cwd(), "public", "uploads", "cvs");
+        
+        try {
+            await mkdir(uploadDir, { recursive: true });
+            const filePath = path.join(uploadDir, filename);
+            await writeFile(filePath, buffer);
+            cvUrl = `/uploads/cvs/${filename}`;
+        } catch (error) {
+            console.error("Error saving CV file:", error);
+            throw new Error("Failed to upload CV file");
+        }
+    }
 
     await prisma.jobApplication.create({
         data: {
@@ -30,6 +51,7 @@ export async function createJobApplication(formData: FormData) {
     });
 
     revalidatePath("/about/career");
+    revalidatePath("/admin/applications");
 }
 
 export async function getJobApplications() {
