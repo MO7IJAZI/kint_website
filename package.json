@@ -3,17 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
-    "postinstall": "prisma generate",
     "dev": "next dev",
-    "build": "next build",
-    "db:init": "node prisma/init-db.js",
-    "db:seed": "prisma db seed",
-    "db:deploy": "npm run db:init && prisma migrate deploy && node -e \"if(process.env.RUN_SEED==='true'){require('child_process').execSync('prisma db seed',{stdio:'inherit'});} else {console.log('RUN_SEED!=true, skipping prisma db seed');}\"",
-    "start": "npm run db:deploy && node .next/standalone/server.js",
-    "lint": "eslint"
+    "build": "prisma generate && next build",
+    "start": "node server.js",
+    "hostinger:deploy": "bash fix-hostinger.sh",
+    "hostinger:test": "node -e \"const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.\\$queryRawUnsafe('SELECT 1').then(() => console.log('✅ DB OK')).catch((e) => console.log('❌ DB Error:', e.message)).finally(() => prisma.\\$disconnect());\"",
+    "prisma:fix": "rm -rf node_modules/.prisma && npx prisma generate --no-engine",
+    "clean": "rm -rf .next node_modules/.cache"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.18.0",
