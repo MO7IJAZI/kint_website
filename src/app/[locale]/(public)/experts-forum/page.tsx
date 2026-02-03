@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { ChevronRight, ChevronLeft, Wheat, Apple, Carrot } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface Article {
     title: string;

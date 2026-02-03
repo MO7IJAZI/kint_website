@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function createBlogPost(formData: FormData) {
     const title = formData.get("title") as string;
@@ -44,6 +44,7 @@ export async function createBlogPost(formData: FormData) {
 
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
+    revalidateTag("blog-posts", { expire: 0 });
 }
 
 export async function updateBlogPost(id: string, formData: FormData) {
@@ -91,6 +92,7 @@ export async function updateBlogPost(id: string, formData: FormData) {
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
     revalidatePath(`/blog/${slug}`);
+    revalidateTag("blog-posts", { expire: 0 });
 }
 
 export async function deleteBlogPost(id: string) {
@@ -100,21 +102,43 @@ export async function deleteBlogPost(id: string) {
 
     revalidatePath("/admin/blog");
     revalidatePath("/blog");
+    revalidateTag("blog-posts", { expire: 0 });
 }
 
+const getBlogPostsCached = unstable_cache(
+    async () =>
+        prisma.blogPost.findMany({
+            orderBy: { createdAt: "desc" },
+        }),
+    ["blog-posts:list"],
+    { revalidate: 10, tags: ["blog-posts"] }
+);
+
+const getBlogPostBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prisma.blogPost.findUnique({
+            where: { slug },
+        }),
+    ["blog-posts:by-slug"],
+    { revalidate: 10, tags: ["blog-posts"] }
+);
+
+const getBlogPostByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.blogPost.findUnique({
+            where: { id },
+        }),
+    ["blog-posts:by-id"],
+    { revalidate: 10, tags: ["blog-posts"] }
+);
+
 export async function getBlogPosts() {
-    return await prisma.blogPost.findMany({
-        orderBy: { createdAt: "desc" },
-    });
+    return getBlogPostsCached();
 }
 
 export async function getBlogPostBySlug(slug: string) {
-    return await prisma.blogPost.findUnique({
-        where: { slug },
-    });
+    return getBlogPostBySlugCached(slug);
 }
 export async function getBlogPostById(id: string) {
-    return await prisma.blogPost.findUnique({
-        where: { id },
-    });
+    return getBlogPostByIdCached(id);
 }

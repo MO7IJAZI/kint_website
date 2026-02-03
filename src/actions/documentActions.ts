@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { uploadFile } from '../lib/upload';
 
@@ -77,6 +77,7 @@ export async function createDocument(formData: FormData) {
         if (category === 'optimum-conditions') {
             revalidatePath('/[locale]/treatment-efficacy/optimum-conditions', 'page');
         }
+        revalidateTag('documents', { expire: 0 });
         return { success: true };
     } catch (error) {
         console.error('Error creating document:', error);
@@ -131,6 +132,7 @@ export async function updateDocument(id: string, formData: FormData) {
         if (category === 'optimum-conditions') {
             revalidatePath('/[locale]/treatment-efficacy/optimum-conditions', 'page');
         }
+        revalidateTag('documents', { expire: 0 });
         return { success: true };
     } catch (error) {
         console.error('Error updating document:', error);
@@ -145,6 +147,7 @@ export async function deleteDocument(id: string) {
         });
 
         revalidatePath('/admin/documents');
+        revalidateTag('documents', { expire: 0 });
         return { success: true };
     } catch (error) {
         console.error('Error deleting document:', error);
@@ -152,14 +155,39 @@ export async function deleteDocument(id: string) {
     }
 }
 
-export async function getDocuments(category?: string) {
-    try {
+const getDocumentsCached = unstable_cache(
+    async (category?: string) => {
         const where = category ? { category, isActive: true } : { isActive: true };
-        
-        const documents = await prismaDocument.findMany({
+        return prismaDocument.findMany({
             where,
             orderBy: { createdAt: 'desc' }
         });
+    },
+    ['documents:list'],
+    { revalidate: 10, tags: ['documents'] }
+);
+
+const getDocumentByIdCached = unstable_cache(
+    async (id: string) =>
+        prismaDocument.findFirst({
+            where: { id }
+        }),
+    ['documents:by-id'],
+    { revalidate: 10, tags: ['documents'] }
+);
+
+const getDocumentBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prismaDocument.findFirst({
+            where: { slug, isActive: true }
+        }),
+    ['documents:by-slug'],
+    { revalidate: 10, tags: ['documents'] }
+);
+
+export async function getDocuments(category?: string) {
+    try {
+        const documents = await getDocumentsCached(category);
 
         return { success: true, data: documents };
     } catch (error) {
@@ -170,9 +198,7 @@ export async function getDocuments(category?: string) {
 
 export async function getDocumentById(id: string) {
     try {
-        const document = await prismaDocument.findFirst({
-            where: { id }
-        });
+        const document = await getDocumentByIdCached(id);
 
         return { success: true, data: document };
     } catch (error) {
@@ -183,9 +209,7 @@ export async function getDocumentById(id: string) {
 
 export async function getDocumentBySlug(slug: string) {
     try {
-        const document = await prismaDocument.findFirst({
-            where: { slug, isActive: true }
-        });
+        const document = await getDocumentBySlugCached(slug);
 
         return { success: true, data: document };
     } catch (error) {

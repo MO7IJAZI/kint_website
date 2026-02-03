@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -52,24 +52,39 @@ export async function createJobApplication(formData: FormData) {
 
     revalidatePath("/about/career");
     revalidatePath("/admin/applications");
+    revalidateTag("job-applications", { expire: 0 });
 }
 
+const getJobApplicationsCached = unstable_cache(
+    async () =>
+        prisma.jobApplication.findMany({
+            include: {
+                jobOffer: true,
+            },
+            orderBy: { submittedAt: "desc" },
+        }),
+    ["job-applications:list"],
+    { revalidate: 10, tags: ["job-applications"] }
+);
+
+const getJobApplicationByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.jobApplication.findUnique({
+            where: { id },
+            include: {
+                jobOffer: true,
+            },
+        }),
+    ["job-applications:by-id"],
+    { revalidate: 10, tags: ["job-applications"] }
+);
+
 export async function getJobApplications() {
-    return await prisma.jobApplication.findMany({
-        include: {
-            jobOffer: true,
-        },
-        orderBy: { submittedAt: "desc" },
-    });
+    return getJobApplicationsCached();
 }
 
 export async function getJobApplicationById(id: string) {
-    return await prisma.jobApplication.findUnique({
-        where: { id },
-        include: {
-            jobOffer: true,
-        },
-    });
+    return getJobApplicationByIdCached(id);
 }
 
 export async function updateJobApplicationStatus(id: string, status: string, notes?: string) {
@@ -82,6 +97,7 @@ export async function updateJobApplicationStatus(id: string, status: string, not
     });
 
     revalidatePath("/admin/applications");
+    revalidateTag("job-applications", { expire: 0 });
 }
 
 export async function deleteJobApplication(id: string) {
@@ -90,4 +106,5 @@ export async function deleteJobApplication(id: string) {
     });
 
     revalidatePath("/admin/applications");
+    revalidateTag("job-applications", { expire: 0 });
 }

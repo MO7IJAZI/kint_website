@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface Product {
     id: string;

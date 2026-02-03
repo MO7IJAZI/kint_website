@@ -1,27 +1,34 @@
 'use server';
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
-export async function getCompanyData() {
-    try {
+const getCompanyDataCached = unstable_cache(
+    async () => {
         const companyData = await prisma.companyData.findFirst();
-        
+
         if (!companyData) {
-            // Create default if not exists
-            return await prisma.companyData.create({
+            return prisma.companyData.create({
                 data: {
                     companyName: "KINT Kafri International",
                     companyName_ar: "KINT Kafri International",
                     ncrNumber: "0000100441",
                     vatNumber: "PL 637-011-20-65",
                     capital: "PLN 177 000",
-                    capital_ar: "PLN 177 000"
-                }
+                    capital_ar: "PLN 177 000",
+                },
             });
         }
-        
+
         return companyData;
+    },
+    ["company-data:single"],
+    { revalidate: 30, tags: ["company-data"] }
+);
+
+export async function getCompanyData() {
+    try {
+        return await getCompanyDataCached();
     } catch (error) {
         console.error("Error fetching company data:", error);
         throw new Error("Failed to fetch company data");
@@ -52,6 +59,7 @@ export async function updateCompanyData(data: {
         revalidatePath('/about/company-data');
         revalidatePath('/ar/about/company-data');
         revalidatePath('/en/about/company-data');
+        revalidateTag("company-data", { expire: 0 });
         
         return { success: true };
     } catch (error) {

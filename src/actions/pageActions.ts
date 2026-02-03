@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function createPage(formData: FormData) {
     const title = formData.get("title") as string;
@@ -27,6 +27,7 @@ export async function createPage(formData: FormData) {
     revalidatePath("/admin/pages");
     revalidatePath(`/${slug}`);
     revalidatePath(`/page/${slug}`);
+    revalidateTag("pages", { expire: 0 });
 }
 
 export async function updatePage(id: string, formData: FormData) {
@@ -59,6 +60,7 @@ export async function updatePage(id: string, formData: FormData) {
     if (page?.slug && page.slug !== slug) {
         revalidatePath(`/${page.slug}`);
     }
+    revalidateTag("pages", { expire: 0 });
 }
 
 export async function deletePage(id: string) {
@@ -73,22 +75,44 @@ export async function deletePage(id: string) {
         revalidatePath(`/${page.slug}`);
         revalidatePath(`/page/${page.slug}`);
     }
+    revalidateTag("pages", { expire: 0 });
 }
 
+const getPagesCached = unstable_cache(
+    async () =>
+        prisma.page.findMany({
+            orderBy: { updatedAt: "desc" },
+        }),
+    ["pages:list"],
+    { revalidate: 10, tags: ["pages"] }
+);
+
+const getPageBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prisma.page.findUnique({
+            where: { slug },
+        }),
+    ["pages:by-slug"],
+    { revalidate: 10, tags: ["pages"] }
+);
+
+const getPageByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.page.findUnique({
+            where: { id },
+        }),
+    ["pages:by-id"],
+    { revalidate: 10, tags: ["pages"] }
+);
+
 export async function getPages() {
-    return await prisma.page.findMany({
-        orderBy: { updatedAt: "desc" },
-    });
+    return getPagesCached();
 }
 
 export async function getPageBySlug(slug: string) {
-    return await prisma.page.findUnique({
-        where: { slug },
-    });
+    return getPageBySlugCached(slug);
 }
 
 export async function getPageById(id: string) {
-    return await prisma.page.findUnique({
-        where: { id },
-    });
+    return getPageByIdCached(id);
 }

@@ -1,8 +1,57 @@
 import prisma from "@/lib/prisma";
 import { Link } from '@/navigation';
 import { getTranslations } from 'next-intl/server';
+import { unstable_cache } from "next/cache";
 
 export const dynamic = 'force-dynamic';
+
+const getAdminDashboardStats = unstable_cache(
+    async () => {
+        const rows = await prisma.$queryRaw<Array<{
+            products: bigint | number;
+            categories: bigint | number;
+            blogs: bigint | number;
+            inquiries: bigint | number;
+            crops: bigint | number;
+            expertArticles: bigint | number;
+            jobOffers: bigint | number;
+            jobApplications: bigint | number;
+            certificates: bigint | number;
+            awards: bigint | number;
+            headquarter: bigint | number;
+        }>>`
+            SELECT
+                (SELECT COUNT(*) FROM \`products\`) AS products,
+                (SELECT COUNT(*) FROM \`categories\`) AS categories,
+                (SELECT COUNT(*) FROM \`blog_posts\`) AS blogs,
+                (SELECT COUNT(*) FROM \`contact_submissions\` WHERE \`isRead\` = 0) AS inquiries,
+                (SELECT COUNT(*) FROM \`crops\`) AS crops,
+                (SELECT COUNT(*) FROM \`expert_articles\`) AS expertArticles,
+                (SELECT COUNT(*) FROM \`job_offers\`) AS jobOffers,
+                (SELECT COUNT(*) FROM \`job_applications\` WHERE \`status\` = 'pending') AS jobApplications,
+                (SELECT COUNT(*) FROM \`certificates\`) AS certificates,
+                (SELECT COUNT(*) FROM \`awards\`) AS awards,
+                (SELECT COUNT(*) FROM \`headquarters\`) AS headquarter
+        `;
+
+        const row = rows[0];
+        return {
+            products: Number(row?.products ?? 0),
+            categories: Number(row?.categories ?? 0),
+            blogs: Number(row?.blogs ?? 0),
+            inquiries: Number(row?.inquiries ?? 0),
+            crops: Number(row?.crops ?? 0),
+            expertArticles: Number(row?.expertArticles ?? 0),
+            jobOffers: Number(row?.jobOffers ?? 0),
+            jobApplications: Number(row?.jobApplications ?? 0),
+            certificates: Number(row?.certificates ?? 0),
+            awards: Number(row?.awards ?? 0),
+            headquarter: Number(row?.headquarter ?? 0),
+        };
+    },
+    ["admin-dashboard-stats"],
+    { revalidate: 15 }
+);
 
 export default async function AdminDashboard() {
     const t = await getTranslations('AdminDashboard');
@@ -22,32 +71,7 @@ export default async function AdminDashboard() {
     };
 
     try {
-        const [pCount, cCount, bCount, iCount, crCount, eaCount, joCount, jaCount, certCount, awardCount, hqCount] = await Promise.all([
-            prisma.product.count(),
-            prisma.category.count(),
-            prisma.blogPost.count(),
-            prisma.contactSubmission.count(),
-            prisma.crop.count(),
-            prisma.expertArticle.count(),
-            prisma.jobOffer.count(),
-            prisma.jobApplication.count(),
-            prisma.certificate.count(),
-            prisma.award.count(),
-            prisma.headquarter.count(),
-        ]);
-        stats = { 
-            products: pCount, 
-            categories: cCount, 
-            blogs: bCount, 
-            inquiries: iCount,
-            crops: crCount,
-            expertArticles: eaCount,
-            jobOffers: joCount,
-            jobApplications: jaCount,
-            certificates: certCount,
-            awards: awardCount,
-            headquarter: hqCount,
-        };
+        stats = await getAdminDashboardStats();
     } catch {
         console.log("Database not connected yet, showing empty stats");
     }

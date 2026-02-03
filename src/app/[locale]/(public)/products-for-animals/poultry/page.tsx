@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Link } from "@/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 async function getDescendantCategoryIds(rootSlug: string) {
   const root = await prisma.category.findUnique({

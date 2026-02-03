@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { syncArticleToSeeder, removeArticleFromSeeder, formatRichText } from "@/lib/seed-utils";
 
 function sanitizeSlug(text: string) {
@@ -72,6 +72,7 @@ export async function createExpertArticle(formData: FormData) {
 
     revalidatePath("/admin/expert-articles");
     revalidatePath("/experts-forum");
+    revalidateTag("expert-articles", { expire: 0 });
 }
 
 export async function updateExpertArticle(id: string, formData: FormData) {
@@ -136,6 +137,7 @@ export async function updateExpertArticle(id: string, formData: FormData) {
     revalidatePath("/admin/expert-articles");
     revalidatePath("/experts-forum");
     revalidatePath(`/experts-forum/${slug}`);
+    revalidateTag("expert-articles", { expire: 0 });
 }
 
 export async function deleteExpertArticle(id: string) {
@@ -150,38 +152,65 @@ export async function deleteExpertArticle(id: string) {
 
     revalidatePath("/admin/expert-articles");
     revalidatePath("/experts-forum");
+    revalidateTag("expert-articles", { expire: 0 });
 }
 
+const getExpertArticlesCached = unstable_cache(
+    async () =>
+        prisma.expertArticle.findMany({
+            orderBy: { createdAt: "desc" },
+        }),
+    ["expert-articles:list"],
+    { revalidate: 10, tags: ["expert-articles"] }
+);
+
+const getExpertArticleBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prisma.expertArticle.findUnique({
+            where: { slug },
+        }),
+    ["expert-articles:by-slug"],
+    { revalidate: 10, tags: ["expert-articles"] }
+);
+
+const getExpertArticleByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.expertArticle.findUnique({
+            where: { id },
+        }),
+    ["expert-articles:by-id"],
+    { revalidate: 10, tags: ["expert-articles"] }
+);
+
+const getExpertArticlesByCategoryCached = unstable_cache(
+    async () => {
+        const articles = await prisma.expertArticle.findMany({
+            where: { isPublished: true },
+            orderBy: { order: "asc" },
+        });
+
+        return {
+            arable: articles.filter((article: any) => article.category === "arable"),
+            fruit: articles.filter((article: any) => article.category === "fruit"),
+            vegetable: articles.filter((article: any) => article.category === "vegetable"),
+        };
+    },
+    ["expert-articles:by-category"],
+    { revalidate: 10, tags: ["expert-articles"] }
+);
+
 export async function getExpertArticles() {
-    return await prisma.expertArticle.findMany({
-        orderBy: { createdAt: "desc" },
-    });
+    return getExpertArticlesCached();
 }
 
 export async function getExpertArticleBySlug(slug: string) {
-    return await prisma.expertArticle.findUnique({
-        where: { slug },
-    });
+    return getExpertArticleBySlugCached(slug);
 }
 
 export async function getExpertArticleById(id: string) {
-    return await prisma.expertArticle.findUnique({
-        where: { id },
-    });
+    return getExpertArticleByIdCached(id);
 }
 
 export async function getExpertArticlesByCategory() {
-    const articles = await prisma.expertArticle.findMany({
-        where: { isPublished: true },
-        orderBy: { order: 'asc' },
-    });
-    
-    // Group by category
-    const grouped = {
-        arable: articles.filter((article: any) => article.category === 'arable'),
-        fruit: articles.filter((article: any) => article.category === 'fruit'),
-        vegetable: articles.filter((article: any) => article.category === 'vegetable'),
-    };
-    
-    return grouped;
+    return getExpertArticlesByCategoryCached();
 }

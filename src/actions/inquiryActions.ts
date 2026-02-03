@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function submitInquiry(formData: FormData) {
     const name = formData.get("name") as string;
@@ -21,13 +21,21 @@ export async function submitInquiry(formData: FormData) {
     });
 
     revalidatePath("/admin/inquiries");
+    revalidateTag("inquiries", { expire: 0 });
     return { success: true, message: "Your message has been sent successfully!" };
 }
 
+const getInquiriesCached = unstable_cache(
+    async () =>
+        prisma.contactSubmission.findMany({
+            orderBy: { createdAt: "desc" },
+        }),
+    ["inquiries:list"],
+    { revalidate: 10, tags: ["inquiries"] }
+);
+
 export async function getInquiries() {
-    return await prisma.contactSubmission.findMany({
-        orderBy: { createdAt: "desc" },
-    });
+    return getInquiriesCached();
 }
 
 export async function markAsRead(id: string) {
@@ -36,6 +44,7 @@ export async function markAsRead(id: string) {
         data: { isRead: true },
     });
     revalidatePath("/admin/inquiries");
+    revalidateTag("inquiries", { expire: 0 });
 }
 
 export async function deleteInquiry(id: string) {
@@ -43,4 +52,5 @@ export async function deleteInquiry(id: string) {
         where: { id },
     });
     revalidatePath("/admin/inquiries");
+    revalidateTag("inquiries", { expire: 0 });
 }

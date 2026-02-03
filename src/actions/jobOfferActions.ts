@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function createJobOffer(formData: FormData) {
     const title = formData.get("title") as string;
@@ -55,6 +55,7 @@ export async function createJobOffer(formData: FormData) {
 
     revalidatePath("/[locale]/admin/career", "page");
     revalidatePath("/[locale]/about/career", "page");
+    revalidateTag("job-offers", { expire: 0 });
 }
 
 export async function updateJobOffer(id: string, formData: FormData) {
@@ -110,6 +111,7 @@ export async function updateJobOffer(id: string, formData: FormData) {
 
     revalidatePath("/[locale]/admin/career", "page");
     revalidatePath("/[locale]/about/career", "page");
+    revalidateTag("job-offers", { expire: 0 });
 }
 
 export async function deleteJobOffer(id: string) {
@@ -120,33 +122,52 @@ export async function deleteJobOffer(id: string) {
 
         revalidatePath("/[locale]/admin/career", "page");
         revalidatePath("/[locale]/about/career", "page");
+        revalidateTag("job-offers", { expire: 0 });
     } catch (error) {
         console.error("Failed to delete job offer:", error);
         throw error;
     }
 }
 
+const getJobOffersCached = unstable_cache(
+    async () =>
+        prisma.jobOffer.findMany({
+            where: {
+                isActive: true,
+                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+            },
+            orderBy: { publishedAt: "desc" },
+        }),
+    ["job-offers:active"],
+    { revalidate: 10, tags: ["job-offers"] }
+);
+
+const getAllJobOffersCached = unstable_cache(
+    async () =>
+        prisma.jobOffer.findMany({
+            orderBy: { createdAt: "desc" },
+        }),
+    ["job-offers:all"],
+    { revalidate: 10, tags: ["job-offers"] }
+);
+
+const getJobOfferByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.jobOffer.findUnique({
+            where: { id },
+        }),
+    ["job-offers:by-id"],
+    { revalidate: 10, tags: ["job-offers"] }
+);
+
 export async function getJobOffers() {
-    return await prisma.jobOffer.findMany({
-        where: {
-            isActive: true,
-            OR: [
-                { expiresAt: null },
-                { expiresAt: { gt: new Date() } }
-            ]
-        },
-        orderBy: { publishedAt: "desc" },
-    });
+    return getJobOffersCached();
 }
 
 export async function getAllJobOffers() {
-    return await prisma.jobOffer.findMany({
-        orderBy: { createdAt: "desc" },
-    });
+    return getAllJobOffersCached();
 }
 
 export async function getJobOfferById(id: string) {
-    return await prisma.jobOffer.findUnique({
-        where: { id },
-    });
+    return getJobOfferByIdCached(id);
 }

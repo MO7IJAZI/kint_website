@@ -4,11 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import parse from 'html-react-parser';
-import 'react-quill-new/dist/quill.snow.css';
 import ArticleStyles from "./ArticleStyles";
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 // Utility to clean content and ensure proper wrapping
 function preprocessContent(html: string) {

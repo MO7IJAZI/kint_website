@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 interface StageInput {
     name: string;
@@ -57,36 +57,58 @@ export async function createCrop(formData: FormData) {
 
     revalidatePath("/admin/crops");
     revalidatePath("/crop-farming");
+    revalidateTag("crops", { expire: 0 });
 }
 
+const getCropsCached = unstable_cache(
+    async () =>
+        prisma.crop.findMany({
+            include: {
+                stages: true,
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+    ["crops:list"],
+    { revalidate: 10, tags: ["crops"] }
+);
+
+const getCropBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prisma.crop.findUnique({
+            where: { slug },
+            include: {
+                stages: {
+                    orderBy: { order: "asc" },
+                },
+                recommendedProducts: true,
+            },
+        }),
+    ["crops:by-slug"],
+    { revalidate: 10, tags: ["crops"] }
+);
+
+const getCropByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.crop.findUnique({
+            where: { id },
+            include: {
+                stages: { orderBy: { order: "asc" } },
+                recommendedProducts: true,
+            },
+        }),
+    ["crops:by-id"],
+    { revalidate: 10, tags: ["crops"] }
+);
+
 export async function getCrops() {
-    return await prisma.crop.findMany({
-        include: {
-            stages: true,
-        },
-        orderBy: { createdAt: "desc" },
-    });
+    return getCropsCached();
 }
 
 export async function getCropBySlug(slug: string) {
-    return await prisma.crop.findUnique({
-        where: { slug },
-        include: {
-            stages: {
-                orderBy: { order: "asc" }
-            },
-            recommendedProducts: true
-        },
-    });
+    return getCropBySlugCached(slug);
 }
 export async function getCropById(id: string) {
-    return await prisma.crop.findUnique({
-        where: { id },
-        include: {
-            stages: { orderBy: { order: "asc" } },
-            recommendedProducts: true
-        },
-    });
+    return getCropByIdCached(id);
 }
 
 export async function updateCrop(id: string, formData: FormData) {
@@ -138,6 +160,7 @@ export async function updateCrop(id: string, formData: FormData) {
     revalidatePath("/admin/crops");
     revalidatePath("/crop-farming");
     revalidatePath(`/crops/${slug}`);
+    revalidateTag("crops", { expire: 0 });
 }
 
 export async function deleteCrop(id: string) {
@@ -147,4 +170,5 @@ export async function deleteCrop(id: string) {
 
     revalidatePath("/admin/crops");
     revalidatePath("/crop-farming");
+    revalidateTag("crops", { expire: 0 });
 }

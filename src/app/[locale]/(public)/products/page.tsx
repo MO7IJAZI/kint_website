@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Link } from '@/navigation';
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface ProductCategory {
     id: string;

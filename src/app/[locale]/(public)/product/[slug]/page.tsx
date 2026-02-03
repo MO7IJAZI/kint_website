@@ -5,7 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from 'next-intl/server';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 interface CompositionRow {
     name: string;
@@ -108,7 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     // 1. Description / How it works
     if (description) {
         tabs.push({
-            label: t('howItWorks').toUpperCase(),
+            label: t('Description').toUpperCase(),
             content: (
                 <div
                     className="technical-content"

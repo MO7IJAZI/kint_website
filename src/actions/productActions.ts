@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 interface DownloadInput {
     title: string;
@@ -83,6 +83,7 @@ export async function createProduct(formData: FormData) {
     revalidatePath("/admin/products");
     revalidatePath("/products");
     revalidatePath(`/product/${slug}`);
+    revalidateTag("products", { expire: 0 });
 }
 
 export async function updateProduct(id: string, formData: FormData) {
@@ -172,6 +173,7 @@ export async function updateProduct(id: string, formData: FormData) {
     revalidatePath("/admin/products");
     revalidatePath("/products");
     revalidatePath(`/product/${slug}`);
+    revalidateTag("products", { expire: 0 });
 }
 
 export async function deleteProduct(id: string) {
@@ -181,33 +183,55 @@ export async function deleteProduct(id: string) {
 
     revalidatePath("/admin/products");
     revalidatePath("/products");
+    revalidateTag("products", { expire: 0 });
 }
 
+const getProductsCached = unstable_cache(
+    async () =>
+        prisma.product.findMany({
+            include: {
+                category: true,
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+    ["products:list"],
+    { revalidate: 10, tags: ["products"] }
+);
+
+const getProductBySlugCached = unstable_cache(
+    async (slug: string) =>
+        prisma.product.findUnique({
+            where: { slug },
+            include: {
+                category: true,
+                images: true,
+                downloads: true,
+            },
+        }),
+    ["products:by-slug"],
+    { revalidate: 10, tags: ["products"] }
+);
+
+const getProductByIdCached = unstable_cache(
+    async (id: string) =>
+        prisma.product.findUnique({
+            where: { id },
+            include: {
+                category: true,
+                downloads: true,
+            },
+        }),
+    ["products:by-id"],
+    { revalidate: 10, tags: ["products"] }
+);
+
 export async function getProducts() {
-    return await prisma.product.findMany({
-        include: {
-            category: true,
-        },
-        orderBy: { createdAt: "desc" },
-    });
+    return getProductsCached();
 }
 
 export async function getProductBySlug(slug: string) {
-    return await prisma.product.findUnique({
-        where: { slug },
-        include: {
-            category: true,
-            images: true,
-            downloads: true,
-        },
-    });
+    return getProductBySlugCached(slug);
 }
 export async function getProductById(id: string) {
-    return await prisma.product.findUnique({
-        where: { id },
-        include: {
-            category: true,
-            downloads: true,
-        },
-    });
+    return getProductByIdCached(id);
 }
