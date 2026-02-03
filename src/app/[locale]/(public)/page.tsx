@@ -31,17 +31,25 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   ];
   const marqueeLogos = [...agentLogos, ...agentLogos];
 
-  const news = await prisma.blogPost.findMany({
-    where: { isPublished: true },
-    orderBy: { publishedAt: 'desc' },
-    take: 3
-  });
+  let news: any[] = [];
+  let categories: Array<{ id: string; name: string; name_ar: string | null; slug: string; image: string | null }> = [];
 
-  const categories = await prisma.category.findMany({
-    where: { isActive: true, parentId: null },
-    select: { id: true, name: true, name_ar: true, slug: true, image: true },
-    orderBy: { order: 'asc' }
-  });
+  try {
+    [news, categories] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: { isPublished: true },
+        orderBy: { publishedAt: 'desc' },
+        take: 3
+      }),
+      prisma.category.findMany({
+        where: { isActive: true, parentId: null },
+        select: { id: true, name: true, name_ar: true, slug: true, image: true },
+        orderBy: { order: 'asc' }
+      })
+    ]);
+  } catch (error) {
+    console.error("Homepage data load failed:", error);
+  }
 
   return (
     <div style={{ direction: isAr ? 'rtl' : 'ltr', fontFamily: isAr ? 'inherit' : 'inherit', overflowX: 'hidden' }}>
