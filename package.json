@@ -20,7 +20,8 @@
     "hostinger:setup": "npx prisma generate"
   },
   "prisma": {
-    "schema": "prisma/schema.prisma"
+    "schema": "prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.18.0",
