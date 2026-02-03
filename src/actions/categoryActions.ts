@@ -74,14 +74,19 @@ export async function deleteCategory(id: string) {
 }
 
 export async function getCategories() {
-    return await prisma.category.findMany({
-        include: {
-            parent: true,
-            children: true,
-            _count: {
-                select: { products: true }
-            }
-        },
-        orderBy: { order: "asc" },
-    });
+    try {
+        return await prisma.category.findMany({
+            include: {
+                parent: true,
+                children: true,
+                _count: {
+                    select: { products: true }
+                }
+            },
+            orderBy: { order: "asc" },
+        });
+    } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        return [];
+    }
 }
