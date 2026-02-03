@@ -11,9 +11,14 @@ npm ci --omit=dev
 echo "🗄️ Generating Prisma..."
 npx prisma generate
 
-# 3. Build Next.js App
+# 3. Clean previous build (optional but good for safety)
+echo "🧹 Cleaning previous build..."
+rm -rf .next
+
+# 4. Build Next.js App with Memory Limit
 echo "🏗️ Building App..."
+export NODE_OPTIONS="--max-old-space-size=4096"
 npm run build
 
-# 4. Start Server (handled by PM2 or similar on Hostinger)
+# 5. Start Server (handled by PM2 or similar on Hostinger)
 echo "✅ Build Complete. Restart your Node.js application in Hostinger panel."

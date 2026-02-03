@@ -3,7 +3,7 @@ const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig = {
-  output: 'standalone',
+  // output: 'standalone', // Disabled for Hostinger Shared Hosting compatibility
   serverExternalPackages: ['prisma', '@prisma/client', 'bcryptjs', 'mysql2'],
 
   experimental: {
