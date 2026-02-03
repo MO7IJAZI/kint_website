@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "db:init": "node prisma/init-db.js",
-    "db:deploy": "npm run db:init && prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:deploy": "npm run db:init && prisma migrate deploy && node -e \"if(process.env.RUN_SEED==='true'){require('child_process').execSync('prisma db seed',{stdio:'inherit'});} else {console.log('RUN_SEED!=true, skipping prisma db seed');}\"",
     "start": "npm run db:deploy && node .next/standalone/server.js",
     "lint": "eslint"
   },
