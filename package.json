@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "build": "prisma generate && prisma migrate deploy && prisma db seed && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "cross-env NODE_ENV=production tsx server.ts",
     "lint": "next lint",
     "hostinger:setup": "npx prisma generate"
