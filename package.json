@@ -1,14 +1,22 @@
 {
   "name": "kint-website",
+  "description": "Next.js (App Router) website for KINT",
   "version": "0.1.0",
   "private": true,
+  "keywords": [
+    "nextjs",
+    "react",
+    "prisma",
+    "mysql"
+  ],
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "node .next/standalone/server.js",
+    "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "hostinger:deploy": "bash fix-hostinger.sh",
     "hostinger:test": "node -e \"const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.\\$queryRawUnsafe('SELECT 1').then(() => console.log('✅ DB OK')).catch((e) => console.log('❌ DB Error:', e.message)).finally(() => prisma.\\$disconnect());\"",
     "prisma:fix": "rm -rf node_modules/.prisma && npx prisma generate --no-engine",
