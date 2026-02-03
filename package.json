@@ -15,12 +15,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
-    "start:standalone": "node .next/standalone/server.js",
-    "hostinger:deploy": "bash fix-hostinger.sh",
-    "hostinger:test": "node -e \"const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.\\$queryRawUnsafe('SELECT 1').then(() => console.log('✅ DB OK')).catch((e) => console.log('❌ DB Error:', e.message)).finally(() => prisma.\\$disconnect());\"",
-    "prisma:fix": "rm -rf node_modules/.prisma && npx prisma generate --no-engine",
-    "clean": "rm -rf .next node_modules/.cache"
+    "start": "node server.js",
+    "prebuild": "npx prisma db pull",
+    "hostinger:setup": "npx prisma generate"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
     "@tiptap/extension-image": "^3.18.0",
@@ -43,7 +43,9 @@
     "next-auth": "5.0.0-beta.30",
     "next-intl": "^4.8.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -52,11 +54,6 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9",
-    "eslint-config-next": "^16.1.6",
-    "tsx": "^4.19.2",
-    "typescript": "5.9.3"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "eslint-config-next": "^16.1.6"
   }
 }
