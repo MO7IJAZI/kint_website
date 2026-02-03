@@ -1,6 +1,0 @@
-PassengerAppRoot /home/u884871213/domains/kint-group.com/public_html
-PassengerAppType node
-PassengerNodejs /opt/alt/alt-nodejs20/root/bin/node
-PassengerStartupFile server.js
-PassengerBaseURI /
-SetEnv NODE_ENV production
