@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "node server.js",
+    "start": "node .next/standalone/server.js",
     "hostinger:deploy": "bash fix-hostinger.sh",
     "hostinger:test": "node -e \"const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.\\$queryRawUnsafe('SELECT 1').then(() => console.log('✅ DB OK')).catch((e) => console.log('❌ DB Error:', e.message)).finally(() => prisma.\\$disconnect());\"",
     "prisma:fix": "rm -rf node_modules/.prisma && npx prisma generate --no-engine",
