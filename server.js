@@ -1,6 +1,16 @@
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from the root .env file
+// We do this BEFORE anything else to ensure they are available
+const envPath = path.join(__dirname, '.env');
+try {
+  require('dotenv').config({ path: envPath });
+  console.log(`Loaded environment variables from ${envPath}`);
+} catch (e) {
+  console.error("Failed to load .env file:", e);
+}
+
 const LOG_FILE = path.join(__dirname, 'server-start.log');
 
 function log(message) {
