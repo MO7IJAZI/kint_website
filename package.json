@@ -17,7 +17,8 @@
     "build": "prisma generate && node scripts/fix-permissions.js && prisma migrate deploy && prisma db seed && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build && node scripts/post-build.js",
     "start": "cross-env NODE_ENV=production node server.js",
     "lint": "next lint",
-    "hostinger:setup": "npx prisma generate"
+    "hostinger:setup": "npx prisma generate",
+    "postinstall": "prisma generate && node scripts/fix-permissions.js"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

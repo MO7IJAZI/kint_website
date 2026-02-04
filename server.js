@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 // Load environment variables from the root .env file
 const envPath = path.join(__dirname, '.env');
@@ -22,15 +23,49 @@ function log(message) {
   }
 }
 
+// Fallback server to show errors in browser instead of 503
+function startFallbackServer(errorMessage) {
+  log("Starting fallback error server...");
+  const port = process.env.PORT || 3000;
+  
+  const server = http.createServer((req, res) => {
+    res.writeHead(500, { 'Content-Type': 'text/html' });
+    res.end(`
+      <html>
+        <head>
+          <title>Deployment Error</title>
+          <style>
+            body { font-family: sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
+            .error-box { background: #fee; border: 1px solid #c00; padding: 1rem; border-radius: 4px; }
+            pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; }
+          </style>
+        </head>
+        <body>
+          <h1>Deployment Failed</h1>
+          <p>The application failed to start. Here is the error log:</p>
+          <div class="error-box">
+            <pre>${errorMessage}</pre>
+          </div>
+          <p>Please check server-debug.log for more details.</p>
+        </body>
+      </html>
+    `);
+  });
+
+  server.listen(port, () => {
+    log(`Fallback server listening on port ${port}`);
+  });
+}
+
 process.on('uncaughtException', (err) => {
   log(`Uncaught Exception: ${err.message}`);
   log(err.stack);
-  process.exit(1);
+  startFallbackServer(`Uncaught Exception: ${err.message}\n${err.stack}`);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   log(`Unhandled Rejection: ${reason}`);
-  process.exit(1);
+  startFallbackServer(`Unhandled Rejection: ${reason}`);
 });
 
 log("Starting server.js...");
@@ -60,7 +95,7 @@ if (fs.existsSync(standaloneDir)) {
   } catch (err) {
     log(`Error starting standalone server: ${err.message}`);
     log(err.stack);
-    process.exit(1);
+    startFallbackServer(`Error starting standalone server: ${err.message}\n${err.stack}`);
   }
 } else {
   // Fallback: Standard Next.js server
@@ -88,11 +123,11 @@ if (fs.existsSync(standaloneDir)) {
     }).catch((err) => {
       log(`Error preparing Next.js app: ${err.message}`);
       log(err.stack);
-      process.exit(1);
+      startFallbackServer(`Error preparing Next.js app: ${err.message}\n${err.stack}`);
     });
   } catch (err) {
     log(`Critical error in fallback server: ${err.message}`);
     log(err.stack);
-    process.exit(1);
+    startFallbackServer(`Critical error in fallback server: ${err.message}\n${err.stack}`);
   }
 }
