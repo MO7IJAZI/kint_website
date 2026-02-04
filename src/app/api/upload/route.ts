@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
+import { uploadFile } from "@/lib/upload";
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,17 +10,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-
-        // Generate unique filename to prevent overwrites
-        const filename = Date.now() + "-" + file.name.replace(/\s+/g, "-");
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
-        const filePath = path.join(uploadDir, filename);
-
-        await mkdir(uploadDir, { recursive: true });
-        await writeFile(filePath, buffer);
-
-        const fileUrl = `/uploads/${filename}`;
+        const fileUrl = await uploadFile(file, "uploads");
 
         return NextResponse.json({ url: fileUrl });
     } catch (error) {
