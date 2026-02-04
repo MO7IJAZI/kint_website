@@ -4,7 +4,7 @@ import type { NextConfig } from 'next';
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  // output: 'standalone', // Disabled for Hostinger Shared Hosting compatibility
+  output: 'standalone', // Enabled for Hostinger Shared Hosting compatibility
   serverExternalPackages: ['prisma', '@prisma/client', 'bcryptjs', 'mysql2'],
 
   experimental: {

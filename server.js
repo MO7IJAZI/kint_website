@@ -1,38 +1,33 @@
-const { createServer } = require('http');
-const { parse } = require('url');
-const next = require('next');
-const fs = require('fs');
 const path = require('path');
 
-const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev });
-const handle = app.getRequestHandler();
-const port = process.env.PORT || 3000;
+// Set the working directory to the standalone folder
+// This is necessary because the standalone server expects to run from its own directory
+const standaloneDir = path.join(__dirname, '.next', 'standalone');
 
-const LOG_FILE = path.join(__dirname, 'server-start.log');
+// Check if standalone directory exists (it might not during local dev if not built with standalone)
+const fs = require('fs');
+if (fs.existsSync(standaloneDir)) {
+  process.chdir(standaloneDir);
+  require(path.join(standaloneDir, 'server.js'));
+} else {
+  // Fallback for local development or if build failed
+  console.log("Standalone directory not found. Starting standard Next.js server...");
+  const { createServer } = require('http');
+  const { parse } = require('url');
+  const next = require('next');
 
-function log(message) {
-  const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${message}\n`;
-  console.log(message);
-  try {
-    fs.appendFileSync(LOG_FILE, logMessage);
-  } catch (e) {
-    console.error("Failed to write to log file:", e);
-  }
-}
+  const dev = process.env.NODE_ENV !== 'production';
+  const app = next({ dev });
+  const handle = app.getRequestHandler();
+  const port = process.env.PORT || 3000;
 
-log("Starting server.js...");
-
-app.prepare().then(() => {
-  createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  }).listen(port, (err) => {
-    if (err) throw err;
-    log(`> Ready on http://localhost:${port}`);
+  app.prepare().then(() => {
+    createServer((req, res) => {
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    }).listen(port, (err) => {
+      if (err) throw err;
+      console.log(`> Ready on http://localhost:${port}`);
+    });
   });
-}).catch((err) => {
-  log(`Error starting server: ${err.message}`);
-  log(err.stack);
-});
+}

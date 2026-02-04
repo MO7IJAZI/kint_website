@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && chmod -R +x node_modules/@prisma/engines || true && prisma migrate deploy && prisma db seed && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
+    "build": "prisma generate && chmod -R +x node_modules/@prisma/engines || true && prisma migrate deploy && prisma db seed && cross-env NODE_OPTIONS=--max-old-space-size=4096 next build && shx cp -r .next/static .next/standalone/.next/",
     "start": "cross-env NODE_ENV=production node server.js",
     "lint": "next lint",
     "hostinger:setup": "npx prisma generate"
@@ -56,6 +56,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^9",
-    "eslint-config-next": "^16.1.6"
+    "eslint-config-next": "^16.1.6",
+    "shx": "^0.4.0"
   }
 }
